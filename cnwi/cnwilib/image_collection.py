@@ -2,6 +2,7 @@ from __future__ import annotations
 import ee
 
 from math import pi
+from cnwi.cnwilib.calculators import Amplitude, Phase
 
 
 class TimeSeries:
@@ -64,12 +65,15 @@ class TimeSeries:
         return self
 
     def build(self) -> TimeSeries:
+        # TODO add property to set if build has been run
         self._add_constant()
         self._add_time()
         self._add_harmonics()
         return self
 
     def linear_regression(self) -> ee.Image:
+        # TODO add property to check if build has been run
+        # TODO if build has not been run raise error
         # build the linear regression
         linear_regression = (
             self.collection.select(self.independent + [self.dependent])
@@ -80,5 +84,17 @@ class TimeSeries:
         )
         return linear_regression
 
-    def fourier_transform(self) -> ee.Image:
-        pass
+    def fourier_transform(self, coefficents: ee.Image) -> ee.Image:
+        """computes the fourier transform of the time series"""
+
+        # add coefficients to each image in the collection
+        self.collection = self.collection.map(lambda image: image.addBands(coefficents))
+
+        for mode in range(1, self.modes + 1):
+            phase = Phase(mode)
+            amplitude = Amplitude(mode)
+            self.collection = self.collection.map(phase.compute)
+            self.collection = self.collection.map(amplitude.compute)
+
+        selectors = f"{self.model.time_series.dependent}|.*coef|amp.*|phase.*"
+        return self.collection.select(selectors).median().unitScale(-1, 1)
