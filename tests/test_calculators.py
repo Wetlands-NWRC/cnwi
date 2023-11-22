@@ -24,7 +24,7 @@ class PhaseTests(unittest.TestCase):
         self.assertEqual(self.phase.cos, f"cos_{self.mode}")
 
     def test_compute(self):
-        image = ee.Image()
+        image = ee.Image(1).cos().addBands(ee.Image(1).sin()).rename("cos_1", "sin_1")
         computed_image = self.phase.compute(image)
         self.assertIsInstance(computed_image, ee.Image)
         self.assertEqual(computed_image.bandNames().get(0).getInfo(), self.phase.name)
@@ -51,7 +51,7 @@ class AmplitudeTests(unittest.TestCase):
         self.assertEqual(self.amplitude.cos, f"cos_{self.mode}")
 
     def test_compute(self):
-        image = ee.Image()
+        image = ee.Image(1).cos().addBands(ee.Image(1).sin()).rename("cos_1", "sin_1")
         computed_image = self.amplitude.compute(image)
         self.assertIsInstance(computed_image, ee.Image)
         self.assertEqual(
