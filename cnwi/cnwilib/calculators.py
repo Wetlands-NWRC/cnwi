@@ -31,7 +31,7 @@ class Phase:
 class Amplitude:
     def __init__(self, mode: int) -> None:
         self.mode = mode
-        self._name = mode
+        self.name = mode
 
     @property
     def name(self) -> str:
