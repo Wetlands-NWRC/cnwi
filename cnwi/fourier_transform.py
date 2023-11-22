@@ -3,21 +3,12 @@
 # need phase and amplitude calcs
 import ee
 
-
-class FourierTransform:
-    def __init__(self, time_series: TimeSereis) -> None:
-        self.time_series = time_series
-
-    @property
-    def coefficients(self) -> ee.Image:
-        """
-        Compute the Fourier coefficients for the time series.
-        :return: the Fourier coefficients for the time series
-        """
-        pass
+from cnwi.cnwilib.image_collection import TimeSeries
 
 
-def compute_fourier_transform(data, sample_rate) -> ee.Image:
+def compute_fourier_transform(
+    optical: ee.ImageCollection,
+) -> ee.Image:
     """
     Compute the Fourier Transform of the data.
     :param data: the data to transform
