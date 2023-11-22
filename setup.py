@@ -7,7 +7,5 @@ if __name__ == "__main__":
         description="CNWI",
         author="Ryan Hamilton",
         author_email="ryan.hamilton@ec.gc.ca",
-        packages=find_packages(
-            where="cnwi", exclude=("tests",), include=("cnwi", "cnwi.*")
-        ),
+        packages=find_packages(exclude=("tests", "test.*"), include=("cnwi", "cnwi.*")),
     )
