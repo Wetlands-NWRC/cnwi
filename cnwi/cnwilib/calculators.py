@@ -4,7 +4,7 @@ import ee
 class Phase:
     def __init__(self, mode: int) -> None:
         self.mode = mode
-        self._name = mode
+        self.name = mode
 
     @property
     def name(self) -> str:
@@ -23,7 +23,9 @@ class Phase:
         return f"cos_{self.mode}"
 
     def compute(self, image: ee.Image) -> ee.Image:
-        return image.select(self.cos).atan2(image.select(self.sin)).rename(self.name)
+        cos = image.select(self.cos)
+        sin = image.select(self.sin)
+        return sin.atan2(cos).rename(self.name)
 
 
 class Amplitude:
