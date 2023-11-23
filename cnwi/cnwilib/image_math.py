@@ -2,9 +2,6 @@ from __future__ import annotations
 import ee
 
 
-from cnwi.cnwilib.image_collection import TimeSeries
-
-
 class LinearRegression:
     def __init__(self, time_series: TimeSeries) -> None:
         self.trend = time_series
