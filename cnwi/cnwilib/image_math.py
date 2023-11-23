@@ -55,11 +55,11 @@ class Phase:
 
     @property
     def sin(self) -> str:
-        return f"sin_{self.mode}"
+        return f"sin_{self.mode}_coef"
 
     @property
     def cos(self) -> str:
-        return f"cos_{self.mode}"
+        return f"cos_{self.mode}_coef"
 
     def compute(self, image: ee.Image) -> ee.Image:
         cos = image.select(self.cos)
@@ -82,11 +82,11 @@ class Amplitude:
 
     @property
     def sin(self) -> str:
-        return f"sin_{self.mode}"
+        return f"sin_{self.mode}_coef"
 
     @property
     def cos(self) -> str:
-        return f"cos_{self.mode}"
+        return f"cos_{self.mode}_coef"
 
     def compute(self, image: ee.Image) -> ee.Image:
         return image.select(self.cos).hypot(image.select(self.sin)).rename(self.name)
