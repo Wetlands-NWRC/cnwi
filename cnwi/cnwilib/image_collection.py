@@ -3,6 +3,7 @@ import ee
 
 from math import pi
 from cnwi.cnwilib.calculators import Amplitude, Phase
+from cnwi.cnwilib.image import LinearRegression
 
 
 class TimeSeries:
@@ -71,24 +72,13 @@ class TimeSeries:
         self._add_harmonics()
         return self
 
-    def linear_regression(self) -> ee.Image:
-        # TODO add property to check if build has been run
-        # TODO if build has not been run raise error
-        # build the linear regression
-        linear_regression = (
-            self.collection.select(self.independent + [self.dependent])
-            .reduce(ee.Reducer.linearRegression(self.independent.length, 1))
-            .select("coefficients")
-            .arrayProject([0])
-            .arrayFlatten([self.time_series.independent, ["coef"]])
-        )
-        return linear_regression
-
-    def fourier_transform(self, coefficents: ee.Image) -> ee.Image:
+    def fourier_transform(self, coefficients: LinearRegression) -> ee.Image:
         """computes the fourier transform of the time series"""
 
         # add coefficients to each image in the collection
-        self.collection = self.collection.map(lambda image: image.addBands(coefficents))
+        self.collection = self.collection.map(
+            lambda image: image.addBands(coefficients.get_coefficients())
+        )
 
         for mode in range(1, self.modes + 1):
             phase = Phase(mode)
