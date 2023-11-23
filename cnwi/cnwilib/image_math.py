@@ -2,6 +2,11 @@ from __future__ import annotations
 import ee
 
 
+####################################################################################################
+class TimeSeries:
+    pass
+
+
 class LinearRegression:
     def __init__(self, time_series: TimeSeries) -> None:
         self.trend = time_series
@@ -31,6 +36,9 @@ class LinearRegression:
 
     def get_coefficients(self) -> ee.Image:
         return self.trend.select("coef")
+
+
+####################################################################################################
 
 
 class Phase:
@@ -83,3 +91,6 @@ class Amplitude:
 
     def compute(self, image: ee.Image) -> ee.Image:
         return image.select(self.cos).hypot(image.select(self.sin)).rename(self.name)
+
+
+####################################################################################################
