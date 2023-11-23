@@ -1,6 +1,8 @@
 # fourier transform
 # Times Series Collection
 # need phase and amplitude calcs
+from __future__ import annotations
+
 import ee
 
 from cnwi.cnwilib.image_collection import TimeSeries
@@ -12,6 +14,20 @@ class FourierTransform:
         self.time_series = time_series
         self.trend = trend
 
+    def _add_phase(self, mode: int) -> FourierTransform:
+        calc = Phase(mode)
+        self.time_series.collection = self.time_series.collection.map(
+            lambda image: image.addBands(calc.compute(image))
+        )
+        return self
+
+    def _add_amplitude(self, mode: int) -> FourierTransform:
+        calc = Amplitude(mode)
+        self.time_series.collection = self.time_series.collection.map(
+            lambda image: image.addBands(calc.compute(image))
+        )
+        return self
+
     def compute(self) -> ee.Image:
         """compute the fourier transform of the time series using the trend from the linear regression"""
         # add coefficients to each image in the collection
@@ -21,14 +37,11 @@ class FourierTransform:
 
         # add phase and amplitude to each image in the collection
         for mode in range(1, self.time_series.modes + 1):
-            phase = Phase(mode)
-            amplitude = Amplitude(mode)
-            self.time_series.collection = self.time_series.collection.map(phase.compute)
-            self.time_series.collection = self.time_series.collection.map(
-                amplitude.compute
-            )
+            self._add_phase(mode)
+            self._add_amplitude(mode)
+
         selectors = f"{self.time_series.dependent}|.*coef|amp.*|phase.*"
-        return self.time_series.collection.select(selectors).median().unitScale(-1, 1)
+        return self.time_series.collection.median().select(selectors).unitScale(-1, 1)
 
 
 def compute_fourier_transform(
