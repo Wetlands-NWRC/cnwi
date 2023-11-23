@@ -1,6 +1,6 @@
 import unittest
 import ee
-from cnwi.cnwilib.image_math import Phase, Amplitude
+from cnwi.cnwilib.image_math import *
 from cnwi.cnwilib.image_collection import TimeSeries
 
 
