@@ -4,7 +4,7 @@
 import ee
 
 from cnwi.cnwilib.image_collection import TimeSeries
-from cnwi.cnwilib.image import LinearRegression
+from cnwi.cnwilib.image_math import LinearRegression
 
 
 def compute_fourier_transform(
@@ -22,5 +22,5 @@ def compute_fourier_transform(
     # compute the trend from the time series
     lin_reges = LinearRegression(time_series)
     # compute the Fourier Transform of the residuals
-    fourier_transform = time_series.fourier_transform()
+    fourier_transform = time_series.fourier_transform(lin_reges)
     return fourier_transform
