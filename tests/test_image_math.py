@@ -141,3 +141,31 @@ class SAVICalculatorTests(unittest.TestCase):
         self.assertEqual(
             computed_image.bandNames().get(0).getInfo(), self.calculator.name
         )
+
+
+class RatioCalculatorTests(unittest.TestCase):
+    def setUp(self):
+        ee.Initialize()
+        self.numerator_band = "B4"
+        self.denominator_band = "B3"
+        self.calculator = RatioCalculator(self.numerator_band, self.denominator_band)
+
+    def test_init(self):
+        self.assertEqual(self.calculator.numerator, self.numerator_band)
+        self.assertEqual(self.calculator.denominator, self.denominator_band)
+        self.assertEqual(self.calculator.name, "Ratio")
+
+    def test_init_with_custom_name(self):
+        custom_name = "CustomRatio"
+        calculator = RatioCalculator(
+            self.numerator_band, self.denominator_band, name=custom_name
+        )
+        self.assertEqual(calculator.name, custom_name)
+
+    def test_compute(self):
+        image = ee.Image([0.1, 0.2, 0.3, 0.4]).rename(["B1", "B2", "B3", "B4"])
+        computed_image = self.calculator.compute(image)
+        self.assertIsInstance(computed_image, ee.Image)
+        self.assertEqual(
+            computed_image.bandNames().get(0).getInfo(), self.calculator.name
+        )
