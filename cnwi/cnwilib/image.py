@@ -10,6 +10,14 @@ class SAVICalculator:
     pass
 
 
+class RatioCalculator:
+    pass
+
+
+class TasseledCapCalculator:
+    pass
+
+
 class ImageStack:
     def __init__(self) -> None:
         self._image = []
@@ -39,30 +47,32 @@ class ImageBuilder:
             raise TypeError("image must be ee.Image")
         self._image = image
 
-    def add_ndvi(self, calculator: NDVICalculator) -> None:
+    def add_ndvi(self, calculator: NDVICalculator) -> ImageBuilder:
         if not isinstance(calculator, NDVICalculator):
             raise TypeError("calculator must be NDVICalculator")
         self.image = self.image.addBands(calculator.compute(self.image))
         return self
 
-    def add_savi(self, calculator: SAVICalculator) -> None:
+    def add_savi(self, calculator: SAVICalculator) -> ImageBuilder:
         if not isinstance(calculator, SAVICalculator):
             raise TypeError("calculator must be SAVICalculator")
         self.image = self.image.addBands(calculator.compute(self.image))
         return self
 
-    def add_tasseled_cap(self, **kwargs) -> None:
-        # TODO Implement calculation
-        name = name or "Tasseled Cap"
+    def add_tasseled_cap(self, calculator: TasseledCapCalculator) -> ImageBuilder:
+        if not isinstance(calculator, TasseledCapCalculator):
+            raise TypeError("calculator must be TasseledCapCalculator")
+        self.image = self.image.addBands(calculator.compute(self.image))
         return self
 
-    def add_ratio(self, numerator: str, denominator: str, name: str = None) -> None:
-        # TODO Implement calculation
-        name = name or "Ratio"
+    def add_ratio(self, calculator: RatioCalculator) -> ImageBuilder:
+        if not isinstance(calculator, RatioCalculator):
+            raise TypeError("calculator must be RatioCalculator")
+        self.image = self.image.addBands(calculator.compute(self.image))
         return self
 
-    def denoise(self, filter: callable) -> None:
-        # TODO Implement filter
+    def add_box_car(self, radius: int = 1) -> ImageBuilder:
+        self.image = self.image.convolve(ee.Kernel.square(radius, "pixels"))
         return self
 
     def build(self) -> ImageBuilder:
