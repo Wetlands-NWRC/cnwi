@@ -93,3 +93,45 @@ class Amplitude:
 
 
 ####################################################################################################
+from abc import ABC, abstractmethod
+
+
+class Calculator(ABC):
+    @abstractmethod
+    def compute(self, image: ee.Image) -> ee.Image:
+        pass
+
+
+class NDVICalculator(Calculator):
+    def __init__(self, nir: str, red: str, name: str = None) -> None:
+        self.nir = nir
+        self.red = red
+        self.name = name or "NDVI"
+
+    def compute(self, image: ee.Image) -> ee.Image:
+        return image.normalizedDifference([self.nir, self.red]).rename(self.name)
+
+
+class SAVICalculator(Calculator):
+    def __init__(self, nir: str, red: str, name: str = None) -> None:
+        self.nir = nir
+        self.red = red
+        self.name = name or "SAVI"
+
+    def compute(self, image: ee.Image) -> ee.Image:
+        return image.expression(
+            "((NIR - RED) / (NIR + RED + 0.5)) * (1.5)",
+            {"NIR": image.select(self.nir), "RED": image.select(self.red)},
+        ).rename(self.name)
+
+
+class TasseledCapCalculator(Calculator):
+    def __init__(self, **kwargs) -> None:
+        self.keys = list(kwargs.keys())
+        self.values = list(kwargs.values())
+
+    # TODO validate band names if len != 5 rasie ValueError
+
+    # TODO validate kwargs keys need to be blue green red nir swir swir2
+
+    # TODO Implement calculation
