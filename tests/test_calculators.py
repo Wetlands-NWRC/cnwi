@@ -1,6 +1,7 @@
 import unittest
 import ee
 from cnwi.cnwilib.image_math import Phase, Amplitude
+from cnwi.cnwilib.image_collection import TimeSeries
 
 
 class PhaseTests(unittest.TestCase):
@@ -59,5 +60,20 @@ class AmplitudeTests(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":
-    unittest.main()
+class LinearRegressionTests(unittest.TestCase):
+    def setUp(self):
+        ee.Initialize()
+        self.time_series = TimeSeries(
+            collection=ee.ImageCollection([]),
+            independent=["independent"],
+            dependent="dependent",
+        )
+        self.linear_regression = LinearRegression(self.time_series)
+
+    def test_trend(self):
+        self.assertIsInstance(self.linear_regression.trend, ee.Image)
+
+    def test_get_coefficients(self):
+        coefficients = self.linear_regression.get_coefficients()
+        self.assertIsInstance(coefficients, ee.Image)
+        self.assertEqual(coefficients.bandNames().get(0).getInfo(), "coef")
