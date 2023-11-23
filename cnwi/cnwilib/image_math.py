@@ -135,3 +135,19 @@ class TasseledCapCalculator(Calculator):
     # TODO validate kwargs keys need to be blue green red nir swir swir2
 
     # TODO Implement calculation
+
+
+class RatioCalculator(Calculator):
+    def __init__(self, numerator: str, denominator: str, name: str = None) -> None:
+        self.numerator = numerator
+        self.denominator = denominator
+        self.name = name or "Ratio"
+
+    def compute(self, image: ee.Image) -> ee.Image:
+        return image.expression(
+            "(NUM / DEN)",
+            {
+                "NUM": image.select(self.numerator),
+                "DEN": image.select(self.denominator),
+            },
+        ).rename(self.name)
