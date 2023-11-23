@@ -130,11 +130,32 @@ class TasseledCapCalculator(Calculator):
         self.keys = list(kwargs.keys())
         self.values = list(kwargs.values())
 
-    # TODO validate band names if len != 5 rasie ValueError
+    def compute(self, image: ee.Image) -> ee.Image:
+        coefficients = ee.Array(
+            [
+                [0.3029, 0.2786, 0.4733, 0.5599, 0.508, 0.1872],
+                [-0.2941, -0.243, -0.5424, 0.7276, 0.0713, -0.1608],
+                [0.1511, 0.1973, 0.3283, 0.3407, -0.7117, -0.4559],
+                [-0.8239, 0.0849, 0.4396, -0.058, 0.2013, -0.2773],
+                [-0.3294, 0.0557, 0.1056, 0.1855, -0.4349, 0.8085],
+                [0.1079, -0.9023, 0.4119, 0.0575, -0.0259, 0.0252],
+            ]
+        )
 
-    # TODO validate kwargs keys need to be blue green red nir swir swir2
+        image = image.select(self.values)
+        array_image = image.toArray()
+        array_image_2d = array_image.toArray(1)
 
-    # TODO Implement calculation
+        components = (
+            ee.Image(coefficients)
+            .matrixMultiply(array_image_2d)
+            .arrayProject([0])
+            .arrayFlatten(
+                [["brightness", "greenness", "wetness", "fourth", "fifth", "sixth"]]
+            )
+        )
+        components = components.select(["brightness", "greenness", "wetness"])
+        return components
 
 
 class RatioCalculator(Calculator):
