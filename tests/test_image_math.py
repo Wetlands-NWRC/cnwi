@@ -91,5 +91,27 @@ class LinearRegressionTests(unittest.TestCase):
         self.assertEqual(coefficients.bandNames().get(0).getInfo(), "constant_coef")
 
 
-if __name__ == "__main__":
-    unittest.main()
+class NDVICalculatorTests(unittest.TestCase):
+    def setUp(self):
+        ee.Initialize()
+        self.nir_band = "B4"
+        self.red_band = "B3"
+        self.calculator = NDVICalculator(self.nir_band, self.red_band)
+
+    def test_init(self):
+        self.assertEqual(self.calculator.nir, self.nir_band)
+        self.assertEqual(self.calculator.red, self.red_band)
+        self.assertEqual(self.calculator.name, "NDVI")
+
+    def test_init_with_custom_name(self):
+        custom_name = "CustomNDVI"
+        calculator = NDVICalculator(self.nir_band, self.red_band, name=custom_name)
+        self.assertEqual(calculator.name, custom_name)
+
+    def test_compute(self):
+        image = ee.Image([0.1, 0.2, 0.3, 0.4]).rename(["B1", "B2", "B3", "B4"])
+        computed_image = self.calculator.compute(image)
+        self.assertIsInstance(computed_image, ee.Image)
+        self.assertEqual(
+            computed_image.bandNames().get(0).getInfo(), self.calculator.name
+        )
