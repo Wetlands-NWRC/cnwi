@@ -63,11 +63,17 @@ class AmplitudeTests(unittest.TestCase):
 class LinearRegressionTests(unittest.TestCase):
     def setUp(self):
         ee.Initialize()
-        self.time_series = TimeSeries(
-            collection=ee.ImageCollection([]),
-            independent=["independent"],
-            dependent="dependent",
+        self.collection = ee.ImageCollection(
+            [
+                ee.Image([1, 2, 3]).rename(["B1", "B2", "B3"]),
+                ee.Image([1, 2, 3]).rename(["B1", "B2", "B3"]),
+                ee.Image([1, 2, 3]).rename(["B1", "B2", "B3"]),
+            ]
         )
+        self.time_series = TimeSeries(
+            collection=self.collection,
+            dependent="B3",
+        ).build()
         self.linear_regression = LinearRegression(self.time_series)
 
     def test_trend(self):
@@ -77,3 +83,7 @@ class LinearRegressionTests(unittest.TestCase):
         coefficients = self.linear_regression.get_coefficients()
         self.assertIsInstance(coefficients, ee.Image)
         self.assertEqual(coefficients.bandNames().get(0).getInfo(), "coef")
+
+
+if __name__ == "__main__":
+    unittest.main()
