@@ -65,9 +65,15 @@ class LinearRegressionTests(unittest.TestCase):
         ee.Initialize()
         self.collection = ee.ImageCollection(
             [
-                ee.Image([1, 2, 3]).rename(["B1", "B2", "B3"]),
-                ee.Image([1, 2, 3]).rename(["B1", "B2", "B3"]),
-                ee.Image([1, 2, 3]).rename(["B1", "B2", "B3"]),
+                ee.Image([1, 2, 3])
+                .rename(["B1", "B2", "B3"])
+                .set("system:time_start", 1),
+                ee.Image([1, 2, 3])
+                .rename(["B1", "B2", "B3"])
+                .set("system:time_start", 2),
+                ee.Image([1, 2, 3])
+                .rename(["B1", "B2", "B3"])
+                .set("system:time_start", 3),
             ]
         )
         self.time_series = TimeSeries(
@@ -82,7 +88,7 @@ class LinearRegressionTests(unittest.TestCase):
     def test_get_coefficients(self):
         coefficients = self.linear_regression.get_coefficients()
         self.assertIsInstance(coefficients, ee.Image)
-        self.assertEqual(coefficients.bandNames().get(0).getInfo(), "coef")
+        self.assertEqual(coefficients.bandNames().get(0).getInfo(), "constant_coef")
 
 
 if __name__ == "__main__":
