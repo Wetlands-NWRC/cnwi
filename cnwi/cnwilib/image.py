@@ -2,6 +2,14 @@ from __future__ import annotations
 import ee
 
 
+class NDVICalculator:
+    pass
+
+
+class SAVICalculator:
+    pass
+
+
 class ImageStack:
     def __init__(self) -> None:
         self._image = []
@@ -31,14 +39,16 @@ class ImageBuilder:
             raise TypeError("image must be ee.Image")
         self._image = image
 
-    def add_ndvi(self, nir: str, red: str, name: str = None) -> None:
-        # TODO Implement calculation
-        name = name or "NDVI"
+    def add_ndvi(self, calculator: NDVICalculator) -> None:
+        if not isinstance(calculator, NDVICalculator):
+            raise TypeError("calculator must be NDVICalculator")
+        self.image = self.image.addBands(calculator.compute(self.image))
         return self
 
-    def add_savi(self, nir: str, red: str, name: str = None) -> None:
-        # TODO Implement calculation
-        name = name or "SAVI"
+    def add_savi(self, calculator: SAVICalculator) -> None:
+        if not isinstance(calculator, SAVICalculator):
+            raise TypeError("calculator must be SAVICalculator")
+        self.image = self.image.addBands(calculator.compute(self.image))
         return self
 
     def add_tasseled_cap(self, **kwargs) -> None:
