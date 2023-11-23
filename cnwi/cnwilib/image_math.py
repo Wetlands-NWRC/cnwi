@@ -29,13 +29,12 @@ class LinearRegression:
             )
             .reduce(ee.Reducer.linearRegression(len(time_series.independent), 1))
             .select("coefficients")
-            .arrayProject([0])
             .arrayFlatten([time_series.independent, ["coef"]])
         )
         return linear_regression
 
     def get_coefficients(self) -> ee.Image:
-        return self.trend.select("coef")
+        return self.trend.select(".*coef")
 
 
 ####################################################################################################
