@@ -28,7 +28,7 @@ class FourierTransform:
                 amplitude.compute
             )
         selectors = f"{self.time_series.dependent}|.*coef|amp.*|phase.*"
-        return self.time_series.select(selectors).median().unitScale(-1, 1)
+        return self.time_series.collection.select(selectors).median().unitScale(-1, 1)
 
 
 def compute_fourier_transform(
