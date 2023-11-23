@@ -27,10 +27,10 @@ class LinearRegression:
             time_series.collection.select(
                 time_series.independent + [time_series.dependent]
             )
-            .reduce(ee.Reducer.linearRegression(time_series.independent.length, 1))
+            .reduce(ee.Reducer.linearRegression(len(time_series.independent), 1))
             .select("coefficients")
             .arrayProject([0])
-            .arrayFlatten([time_series.time_series.independent, ["coef"]])
+            .arrayFlatten([time_series.independent, ["coef"]])
         )
         return linear_regression
 
