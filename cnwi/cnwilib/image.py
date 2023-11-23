@@ -1,21 +1,85 @@
 from __future__ import annotations
+from abc import ABC, abstractmethod
+
 import ee
 
 
-class NDVICalculator:
-    pass
+class Calculator(ABC):
+    @abstractmethod
+    def compute(self, image: ee.Image) -> ee.Image:
+        pass
 
 
-class SAVICalculator:
-    pass
+class NDVICalculator(Calculator):
+    def __init__(self, nir: str, red: str, name: str = None) -> None:
+        self.nir = nir
+        self.red = red
+        self.name = name or "NDVI"
+
+    def compute(self, image: ee.Image) -> ee.Image:
+        return image.normalizedDifference([self.nir, self.red]).rename(self.name)
 
 
-class RatioCalculator:
-    pass
+class SAVICalculator(Calculator):
+    def __init__(self, nir: str, red: str, name: str = None) -> None:
+        self.nir = nir
+        self.red = red
+        self.name = name or "SAVI"
+
+    def compute(self, image: ee.Image) -> ee.Image:
+        return image.expression(
+            "((NIR - RED) / (NIR + RED + 0.5)) * (1.5)",
+            {"NIR": image.select(self.nir), "RED": image.select(self.red)},
+        ).rename(self.name)
 
 
-class TasseledCapCalculator:
-    pass
+class TasseledCapCalculator(Calculator):
+    def __init__(self, **kwargs) -> None:
+        self.keys = list(kwargs.keys())
+        self.values = list(kwargs.values())
+
+    def compute(self, image: ee.Image) -> ee.Image:
+        coefficients = ee.Array(
+            [
+                [0.3029, 0.2786, 0.4733, 0.5599, 0.508, 0.1872],
+                [-0.2941, -0.243, -0.5424, 0.7276, 0.0713, -0.1608],
+                [0.1511, 0.1973, 0.3283, 0.3407, -0.7117, -0.4559],
+                [-0.8239, 0.0849, 0.4396, -0.058, 0.2013, -0.2773],
+                [-0.3294, 0.0557, 0.1056, 0.1855, -0.4349, 0.8085],
+                [0.1079, -0.9023, 0.4119, 0.0575, -0.0259, 0.0252],
+            ]
+        )
+
+        image = image.select(self.values)
+        array_image = image.toArray()
+        array_image_2d = array_image.toArray(1)
+
+        components = (
+            ee.Image(coefficients)
+            .matrixMultiply(array_image_2d)
+            .arrayProject([0])
+            .arrayFlatten(
+                [["brightness", "greenness", "wetness", "fourth", "fifth", "sixth"]]
+            )
+        )
+        components = components.select(["brightness", "greenness", "wetness"])
+        return components
+
+
+class RatioCalculator(Calculator):
+    def __init__(self, numerator: str, denominator: str, name: str = None) -> None:
+        self.numerator = numerator
+        self.denominator = denominator
+        self.name = name or "Ratio"
+
+    def compute(self, image: ee.Image) -> ee.Image:
+        return image.expression(
+            "(NUM / DEN)",
+            {
+                "NUM": image.select(self.numerator),
+                "DEN": image.select(self.denominator),
+            },
+        ).rename(self.name)
 
 
 class ImageStack:
@@ -36,16 +100,6 @@ class ImageStack:
 class ImageBuilder:
     def __init__(self) -> None:
         self.image = None
-
-    @property
-    def image(self) -> ee.Image:
-        return self._image
-
-    @image.setter
-    def image(self, image: ee.Image) -> None:
-        if not isinstance(image, ee.Image):
-            raise TypeError("image must be ee.Image")
-        self._image = image
 
     def add_ndvi(self, calculator: NDVICalculator) -> ImageBuilder:
         if not isinstance(calculator, NDVICalculator):
