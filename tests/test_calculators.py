@@ -1,6 +1,6 @@
 import unittest
 import ee
-from cnwi.cnwilib.calculators import Phase, Amplitude
+from cnwi.cnwilib.image_math import Phase, Amplitude
 
 
 class PhaseTests(unittest.TestCase):
