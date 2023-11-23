@@ -2,7 +2,7 @@ from __future__ import annotations
 import ee
 
 from math import pi
-from cnwi.cnwilib.calculators import Amplitude, Phase
+from cnwi.cnwilib.image_math import Amplitude, Phase
 from cnwi.cnwilib.image import LinearRegression
 
 
