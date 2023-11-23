@@ -4,13 +4,14 @@
 import ee
 
 from cnwi.cnwilib.image_collection import TimeSeries
+from cnwi.cnwilib.image import LinearRegression
 
 
 def compute_fourier_transform(
     optical: ee.ImageCollection, dependent_variable: str, modes: int = 3
 ) -> ee.Image:
     """
-    Compute the Fourier Transform of the data.
+    Compute the Fourier Transform from a time series. A time sereis object is computed from the optical data.
     :param data: the data to transform
     :param sample_rate: the sample rate of the data
     :return: the Fourier Transform of the data
@@ -19,8 +20,7 @@ def compute_fourier_transform(
     # build the time series
     time_series = TimeSeries(optical, dependent=dependent_variable, modes=modes).build()
     # compute the trend from the time series
-    lin_reges = time_series.linear_regression()
-    # compute the residuals from the time series
-    residuals = time_series.residuals(trend)
+    lin_reges = LinearRegression(time_series)
     # compute the Fourier Transform of the residuals
-    fourier_transform = residuals.fourier_transform()
+    fourier_transform = time_series.fourier_transform()
+    return fourier_transform
