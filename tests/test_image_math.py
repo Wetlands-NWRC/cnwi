@@ -169,3 +169,30 @@ class RatioCalculatorTests(unittest.TestCase):
         self.assertEqual(
             computed_image.bandNames().get(0).getInfo(), self.calculator.name
         )
+
+
+class TasseledCapCalculatorTests(unittest.TestCase):
+    def setUp(self):
+        ee.Initialize()
+        self.image = ee.Image(list(range(1, 7))).rename(
+            ["B1", "B2", "B3", "B4", "B5", "B6"]
+        )
+
+        bands = {
+            "Blue": "B1",
+            "Green": "B2",
+            "Red": "B3",
+            "NIR": "B4",
+            "SWIR": "B5",
+            "SWIR2": "B6",
+        }
+
+        self.calculator = TasseledCapCalculator(**bands)
+
+    def test_compute(self):
+        computed_image = self.calculator.compute(self.image)
+        self.assertIsInstance(computed_image, ee.Image)
+        self.assertEqual(
+            computed_image.bandNames().getInfo(),
+            ["brightness", "greenness", "wetness"],
+        )
