@@ -89,6 +89,39 @@ class ImageBuilderTests(unittest.TestCase):
             ["B1", "B2", "B3", "B4", "B5", "B6", "Ratio"],
         )
 
+    def test_select_dv(self):
+        self.builder.image = ee.Image(list(range(1, 4))).rename(["VV", "VH", "angle"])
+        result = self.builder.select_dv()
+        self.assertIsInstance(result, ImageBuilder)
+        self.assertEqual(
+            result.image.bandNames().getInfo(),
+            ["VV", "VH"],
+        )
+
+    def test_select_dh(self):
+        self.builder.image = ee.Image(list(range(1, 4))).rename(["HH", "HV", "angle"])
+        result = self.builder.select_dh()
+        self.assertIsInstance(result, ImageBuilder)
+        self.assertEqual(
+            result.image.bandNames().getInfo(),
+            ["HH", "HV"],
+        )
+
+    def test_select_data_cube_bands(self):
+        from band_names import data_cube_band_names, expected
+
+        image = ee.Image(list(range(1, len(data_cube_band_names) + 1))).rename(
+            data_cube_band_names
+        )
+
+        self.builder.image = image
+        result = self.builder.select_data_cube_bands()
+        self.assertIsInstance(result, ImageBuilder)
+        self.assertEqual(
+            result.image.bandNames().getInfo(),
+            expected,
+        )
+
     def test_add_box_car(self):
         radius = 1
         self.builder.image = self.image
