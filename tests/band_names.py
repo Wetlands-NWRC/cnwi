@@ -87,3 +87,22 @@ expected = [
     "c_fall_b11_20m",
     "c_fall_b12_20m",
 ]
+
+
+expected_calc_res = [
+    "NDVI",
+    "NDVI_1",
+    "NDVI_2",
+    "SAVI",
+    "SAVI_1",
+    "SAVI_2",
+    "brightness",
+    "greenness",
+    "wetness",
+    "brightness_1",
+    "greenness_1",
+    "wetness_1",
+    "brightness_2",
+    "greenness_2",
+    "wetness_2",
+]
