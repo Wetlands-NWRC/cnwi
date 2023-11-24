@@ -109,7 +109,7 @@ class ImageBuilder:
         self.image = None
 
     def add_calculator(self, calculator: Calculator) -> ImageBuilder:
-        if not issubclass(calculator, Calculator):
+        if not isinstance(calculator, Calculator):
             raise TypeError("calculator must be Calculator Object")
         self.image = self.image.addBands(calculator.compute(self.image))
         return self
