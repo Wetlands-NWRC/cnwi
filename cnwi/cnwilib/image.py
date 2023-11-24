@@ -108,7 +108,6 @@ class ImageBuilder:
     def __init__(self) -> None:
         self.image = None
 
-    # TODO need to refactor this to have only one add_calculation method lot of duplication
     def add_calculator(self, calculator: Calculator) -> ImageBuilder:
         if not issubclass(calculator, Calculator):
             raise TypeError("calculator must be Calculator Object")
