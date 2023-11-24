@@ -134,3 +134,41 @@ class ImageBuilderTests(unittest.TestCase):
         result = self.builder.build()
         self.assertIsInstance(result, ImageBuilder)
         self.assertEqual(result.image, self.image)
+
+
+class ImageDirectorTests(unittest.TestCase):
+    def setUp(self):
+        ee.Initialize()
+        self.builder = ImageBuilder()
+        self.director = ImageDirector(self.builder)
+
+    def test_build_data_cube(self):
+        from band_names import data_cube_band_names, expected, expected_calc_res
+
+        image = ee.Image(list(range(1, len(data_cube_band_names) + 1))).rename(
+            data_cube_band_names
+        )
+        expected.extend(expected_calc_res)
+
+        result = self.director.build_data_cube(image)
+        self.assertIsInstance(result, ImageBuilder)
+        self.assertIsInstance(result.image, ee.Image)
+        self.assertEqual(result.image.bandNames().getInfo(), expected)
+        # Add assertions here to validate the result
+
+    def test_build_land_sat_8(self):
+        image = ee.Image()
+        with self.assertRaises(NotImplementedError):
+            self.director.build_land_sat_8(image)
+
+    def test_build_sentinel_1(self):
+        image = ee.Image()
+        result = self.director.build_sentinel_1(image)
+        self.assertIsInstance(result, ImageBuilder)
+        # Add assertions here to validate the result
+
+    def test_build_alos(self):
+        image = ee.Image()
+        result = self.director.build_alos(image)
+        self.assertIsInstance(result, ImageBuilder)
+        # Add assertions here to validate the result
