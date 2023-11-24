@@ -163,21 +163,42 @@ class ImageDirector:
 
         # add ndvi
         # TODO update to use data cube band names
-        spring_ndvi = NDVICalculator("B8", "B4", "spring_ndvi")
-        summer_ndvi = NDVICalculator("B8", "B4", "summer_ndvi")
-        fall_ndvi = NDVICalculator("B8", "B4", "fall_ndvi")
+        spring_ndvi = NDVICalculator("a_spri_b08_10m", "a_spri_b04_10m", "NDVI")
+        summer_ndvi = NDVICalculator("b_summ_b08_10m", "b_summ_b04_10m", "NDVI")
+        fall_ndvi = NDVICalculator("c_fall_b08_10m", "c_fall_b04_10m", "NDVI")
 
         # add savis
-        spring_savi = SAVICalculator("B8", "B4", "spring_savi")
-        summer_savi = SAVICalculator("B8", "B4", "summer_savi")
-        fall_savi = SAVICalculator("B8", "B4", "fall_savi")
+        spring_savi = SAVICalculator("a_spri_b08_10m", "a_spri_b04_10m", "SAVI")
+        summer_savi = SAVICalculator("b_summ_b08_10m", "b_summ_b04_10m", "SAVI")
+        fall_savi = SAVICalculator("c_fall_b08_10m", "c_fall_b04_10m", "SAVI")
 
         # add tassled cap
-        spring_tassled_cap = TasseledCapCalculator("B2", "B3", "B4", "B5", "B6", "B7")
-        summer_tassled_cap = TasseledCapCalculator("B2", "B3", "B4", "B5", "B6", "B7")
-        fall_tassled_cap = TasseledCapCalculator("B2", "B3", "B4", "B5", "B6", "B7")
+        spring_tassled_cap = TasseledCapCalculator(
+            blue="a_spri_b02_10m",
+            green="a_spri_b03_10m",
+            red="a_spri_b04_10m",
+            nir="a_spri_b08_10m",
+            swir1="a_spri_b11_10m",
+            swir2="a_spri_b12_10m",
+        )
 
-        ###
+        summer_tassled_cap = TasseledCapCalculator(
+            blue="b_summ_b02_10m",
+            green="b_summ_b03_10m",
+            red="b_summ_b04_10m",
+            nir="b_summ_b08_10m",
+            swir1="b_summ_b11_10m",
+            swir2="b_summ_b12_10m",
+        )
+
+        fall_tassled_cap = TasseledCapCalculator(
+            blue="c_fall_b02_10m",
+            green="c_fall_b03_10m",
+            red="c_fall_b04_10m",
+            nir="c_fall_b08_10m",
+            swir1="c_fall_b11_10m",
+            swir2="c_fall_b12_10m",
+        )
 
         # start the build process
         self.builder = (
