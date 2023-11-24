@@ -7,3 +7,4 @@ All notable changes to this project will be documented in this file.
 - Added Image Processing Functionality (Data Cube, Sentinel-1, ALOS)
 - Added Functionality to pre process data for use downstream for classification
 - Added Random Forest Classification Functionality
+- Added Functionality to compute Terrain Analysis from the tagee package
