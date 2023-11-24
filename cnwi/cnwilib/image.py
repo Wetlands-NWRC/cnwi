@@ -177,8 +177,8 @@ class ImageDirector:
             green="a_spri_b03_10m",
             red="a_spri_b04_10m",
             nir="a_spri_b08_10m",
-            swir1="a_spri_b11_10m",
-            swir2="a_spri_b12_10m",
+            swir1="a_spri_b11_20m",
+            swir2="a_spri_b12_20m",
         )
 
         summer_tassled_cap = TasseledCapCalculator(
@@ -186,8 +186,8 @@ class ImageDirector:
             green="b_summ_b03_10m",
             red="b_summ_b04_10m",
             nir="b_summ_b08_10m",
-            swir1="b_summ_b11_10m",
-            swir2="b_summ_b12_10m",
+            swir1="b_summ_b11_20m",
+            swir2="b_summ_b12_20m",
         )
 
         fall_tassled_cap = TasseledCapCalculator(
@@ -195,13 +195,14 @@ class ImageDirector:
             green="c_fall_b03_10m",
             red="c_fall_b04_10m",
             nir="c_fall_b08_10m",
-            swir1="c_fall_b11_10m",
-            swir2="c_fall_b12_10m",
+            swir1="c_fall_b11_20m",
+            swir2="c_fall_b12_20m",
         )
 
         # start the build process
         self.builder = (
-            self.builder.add_calculator(spring_ndvi)
+            self.builder.select_data_cube_bands()
+            .add_calculator(spring_ndvi)
             .add_calculator(summer_ndvi)
             .add_calculator(fall_ndvi)
             .add_calculator(spring_savi)
@@ -210,7 +211,6 @@ class ImageDirector:
             .add_calculator(spring_tassled_cap)
             .add_calculator(summer_tassled_cap)
             .add_calculator(fall_tassled_cap)
-            .select_data_cube_bands()
             .build()
         )
         return self._builder
