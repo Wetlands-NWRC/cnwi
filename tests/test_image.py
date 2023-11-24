@@ -162,13 +162,17 @@ class ImageDirectorTests(unittest.TestCase):
             self.director.build_land_sat_8(image)
 
     def test_build_sentinel_1(self):
-        image = ee.Image()
+        image = ee.Image(list(range(0, 3))).rename(["VV", "VH", "angle"])
         result = self.director.build_sentinel_1(image)
         self.assertIsInstance(result, ImageBuilder)
         # Add assertions here to validate the result
+        self.assertIsInstance(result.image, ee.Image)
+        self.assertEqual(result.image.bandNames().getInfo(), ["VV", "VH", "VV/VH"])
 
     def test_build_alos(self):
-        image = ee.Image()
+        image = ee.Image(list(range(0, 3))).rename(["HH", "HV", "angle"])
         result = self.director.build_alos(image)
         self.assertIsInstance(result, ImageBuilder)
         # Add assertions here to validate the result
+        self.assertIsInstance(result.image, ee.Image)
+        self.assertEqual(result.image.bandNames().getInfo(), ["HH", "HV", "HH/HV"])
