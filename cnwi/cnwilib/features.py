@@ -8,11 +8,13 @@ import pandas as pd
 ####################################################################################################
 
 
-def insert_values_into_features():
+def insert_values_into_features(
+    features: gpd.GeoDataFrame, values: pd.Series
+) -> gpd.GeoDataFrame:
     pass
 
 
-def create_data_lookup():
+def create_data_lookup(labels: list[str] | pd.Series) -> pd.DataFrame:
     pass
 
 
@@ -26,11 +28,11 @@ def insert_is_training(
     pass
 
 
-def load_from_data_manifest() -> gpd.GeoDataFrame:
+def load_from_data_manifest(manifest: pd.DataFrame) -> gpd.GeoDataFrame:
     pass
 
 
-def make_data_manifest() -> pd.DataFrame:
+def make_data_manifest(file_paths: list[str]) -> pd.DataFrame:
     pass
 
 
