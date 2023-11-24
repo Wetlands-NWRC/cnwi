@@ -129,13 +129,12 @@ class ImageBuilder:
         self.image = self.image.select("H.*")
         return self
 
-    def remove_60m(self) -> ImageBuilder:
+    def select_data_cube_bands(self) -> ImageBuilder:
         # TODO Implement
+        """selects only the spectral bands from the data cube, and removes the rest b1 is omitted"""
+        pattern = "a_spri_b0[2-9].*|a_spri_b[1-2].*|b_summ_b0[2-9].*|b_summ_b[1-2].*|c_fall_b0[2-9].*|c_fall_b[1-2].*"
+        self.image = self.image.select(pattern)
         return self
-
-    def select_spectral_bands(self) -> ImageBuilder:
-        # TODO Implement
-        pass
 
     def build(self) -> ImageBuilder:
         return self
@@ -163,6 +162,7 @@ class ImageDirector:
         # set up calculators
 
         # add ndvi
+        # TODO update to use data cube band names
         spring_ndvi = NDVICalculator("B8", "B4", "spring_ndvi")
         summer_ndvi = NDVICalculator("B8", "B4", "summer_ndvi")
         fall_ndvi = NDVICalculator("B8", "B4", "fall_ndvi")
@@ -190,8 +190,8 @@ class ImageDirector:
             .add_calculator(spring_tassled_cap)
             .add_calculator(summer_tassled_cap)
             .add_calculator(fall_tassled_cap)
-            .select_spectral_bands()
-            .remove_60m()
+            .select_data_cube_bands()
+            .build()
         )
         return self._builder
 
