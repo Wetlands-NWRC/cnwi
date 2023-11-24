@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import ee
 
 
+####################################################################################################
 class Calculator(ABC):
     @abstractmethod
     def compute(self, image: ee.Image) -> ee.Image:
@@ -82,6 +83,9 @@ class RatioCalculator(Calculator):
         ).rename(self.name)
 
 
+####################################################################################################
+
+
 class ImageStack:
     def __init__(self) -> None:
         self._image = []
@@ -97,37 +101,41 @@ class ImageStack:
         return ee.Image.cat(*self._image)
 
 
+####################################################################################################
+
+
 class ImageBuilder:
     def __init__(self) -> None:
         self.image = None
 
-    def add_ndvi(self, calculator: NDVICalculator) -> ImageBuilder:
-        if not isinstance(calculator, NDVICalculator):
-            raise TypeError("calculator must be NDVICalculator")
-        self.image = self.image.addBands(calculator.compute(self.image))
-        return self
-
-    def add_savi(self, calculator: SAVICalculator) -> ImageBuilder:
-        if not isinstance(calculator, SAVICalculator):
-            raise TypeError("calculator must be SAVICalculator")
-        self.image = self.image.addBands(calculator.compute(self.image))
-        return self
-
-    def add_tasseled_cap(self, calculator: TasseledCapCalculator) -> ImageBuilder:
-        if not isinstance(calculator, TasseledCapCalculator):
-            raise TypeError("calculator must be TasseledCapCalculator")
-        self.image = self.image.addBands(calculator.compute(self.image))
-        return self
-
-    def add_ratio(self, calculator: RatioCalculator) -> ImageBuilder:
-        if not isinstance(calculator, RatioCalculator):
-            raise TypeError("calculator must be RatioCalculator")
+    # TODO need to refactor this to have only one add_calculation method lot of duplication
+    def add_calculator(self, calculator: Calculator) -> ImageBuilder:
+        if not issubclass(calculator, Calculator):
+            raise TypeError("calculator must be Calculator Object")
         self.image = self.image.addBands(calculator.compute(self.image))
         return self
 
     def add_box_car(self, radius: int = 1) -> ImageBuilder:
         self.image = self.image.convolve(ee.Kernel.square(radius, "pixels"))
         return self
+
+    def select_dv(self) -> ImageBuilder:
+        """selects dual pol bands VV and VH"""
+        self.image = self.image.select("V.*")
+        return self
+
+    def select_dh(self) -> ImageBuilder:
+        """selects dual pol bands HH and HV"""
+        self.image = self.image.select("H.*")
+        return self
+
+    def remove_60m(self) -> ImageBuilder:
+        # TODO Implement
+        return self
+
+    def select_spectral_bands(self) -> ImageBuilder:
+        # TODO Implement
+        pass
 
     def build(self) -> ImageBuilder:
         return self
@@ -147,18 +155,73 @@ class ImageDirector:
             raise TypeError("builder must be ImageBuilder")
         self._builder = builder
 
-    def build_data_cube(self, datacube: ee.ImageCollection) -> ImageBuilder:
+    def build_data_cube(self, image: ee.Image) -> ImageBuilder:
         # TODO Implement datacube
+        # set the image to build
+        self.builder.image = image
+
+        # set up calculators
+
+        # add ndvi
+        spring_ndvi = NDVICalculator("B8", "B4", "spring_ndvi")
+        summer_ndvi = NDVICalculator("B8", "B4", "summer_ndvi")
+        fall_ndvi = NDVICalculator("B8", "B4", "fall_ndvi")
+
+        # add savis
+        spring_savi = SAVICalculator("B8", "B4", "spring_savi")
+        summer_savi = SAVICalculator("B8", "B4", "summer_savi")
+        fall_savi = SAVICalculator("B8", "B4", "fall_savi")
+
+        # add tassled cap
+        spring_tassled_cap = TasseledCapCalculator("B2", "B3", "B4", "B5", "B6", "B7")
+        summer_tassled_cap = TasseledCapCalculator("B2", "B3", "B4", "B5", "B6", "B7")
+        fall_tassled_cap = TasseledCapCalculator("B2", "B3", "B4", "B5", "B6", "B7")
+
+        ###
+
+        # start the build process
+        self.builder = (
+            self.builder.add_calculator(spring_ndvi)
+            .add_calculator(summer_ndvi)
+            .add_calculator(fall_ndvi)
+            .add_calculator(spring_savi)
+            .add_calculator(summer_savi)
+            .add_calculator(fall_savi)
+            .add_calculator(spring_tassled_cap)
+            .add_calculator(summer_tassled_cap)
+            .add_calculator(fall_tassled_cap)
+            .select_spectral_bands()
+            .remove_60m()
+        )
         return self._builder
 
-    def build_land_sat_8(self, datacube: ee.ImageCollection) -> ImageBuilder:
+    def build_land_sat_8(self, image: ee.Image) -> ImageBuilder:
         # TODO Implement datacube
+        raise NotImplementedError
+
+    def build_sentinel_1(self, image: ee.Image) -> ImageBuilder:
+        # set the build image
+        self.builder.image = image
+
+        # set up calcs
+        ratio = RatioCalculator("VV", "VH", "VV/VH")
+        # raito
+
+        # start the build process
+        self.builder = self.builder.add_box_car().add_calculator(ratio).select_dv()
         return self._builder
 
-    def build_sentinel_1(self, datacube: ee.ImageCollection) -> ImageBuilder:
-        # TODO Implement datacube
+    def build_alos(self, image: ee.Image) -> ImageBuilder:
+        # set the build image
+        self.builder.image = image
+        # set up calcs
+        ratio = RatioCalculator("HH", "HV", "HH/HV")
+        # raito
+
+        # start the build process
+        self.builder = self.builder.add_box_car().add_calculator(ratio).select_dh()
+
         return self._builder
 
-    def build_alos(self, datacube: ee.ImageCollection) -> ImageBuilder:
-        # TODO Implement datacube
-        return self._builder
+
+####################################################################################################
