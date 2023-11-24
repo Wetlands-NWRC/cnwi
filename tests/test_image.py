@@ -39,7 +39,7 @@ class ImageBuilderTests(unittest.TestCase):
     def test_add_ndvi(self):
         calculator = NDVICalculator(nir="B5", red="B4", name="NDVI")
         self.builder.image = self.image
-        self.builder.add_ndvi(calculator)
+        self.builder.add_calculator(calculator)
         self.assertIsInstance(self.builder.image, ee.Image)
         self.assertEqual(
             self.builder.image.bandNames().getInfo(),
@@ -50,7 +50,7 @@ class ImageBuilderTests(unittest.TestCase):
     def test_add_savi(self):
         calculator = SAVICalculator(nir="B5", red="B4", name="SAVI")
         self.builder.image = self.image
-        self.builder.add_savi(calculator)
+        self.builder.add_calculator(calculator)
         self.assertIsInstance(self.builder.image, ee.Image)
         # Add assertions here to validate the image after adding SAVI
         self.assertEqual(
@@ -70,7 +70,7 @@ class ImageBuilderTests(unittest.TestCase):
             }
         )
         self.builder.image = self.image
-        self.builder.add_tasseled_cap(calculator)
+        self.builder.add_calculator(calculator)
         self.assertIsInstance(self.builder.image, ee.Image)
         # Add assertions here to validate the image after adding Tasseled Cap
         self.assertEqual(
@@ -81,7 +81,7 @@ class ImageBuilderTests(unittest.TestCase):
     def test_add_ratio(self):
         calculator = RatioCalculator(numerator="B5", denominator="B4", name="Ratio")
         self.builder.image = self.image
-        self.builder.add_ratio(calculator)
+        self.builder.add_calculator(calculator)
         self.assertIsInstance(self.builder.image, ee.Image)
         # Add assertions here to validate the image after adding Ratio
         self.assertEqual(
