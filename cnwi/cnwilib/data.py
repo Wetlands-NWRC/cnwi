@@ -15,7 +15,7 @@ def get_shapefile_paths(data_dir: str) -> list[str]:
 
 
 def create_raw_data_manifest(file_paths: list[str]) -> pd.DataFrame:
-    # TODO from the path get the type (training, validation, or region) and region_id
+    """Returns a dataframe with the file path, region id, and type of data."""
     df = pd.DataFrame(file_paths, columns=["file_path"])
     # lookup -> map int value to represent type 1, 2, 3 (training, validation, region)
     # region_id
@@ -30,17 +30,18 @@ def create_raw_data_manifest(file_paths: list[str]) -> pd.DataFrame:
 
 
 def process_data_manifest(df: pd.DataFrame) -> gpd.GeoDataFrame:
+    """Returns a GeoDataFrame with the class name, geometry, type, and region id."""
     processed_gdfs = []
 
     # ony need to process the training and validation data
     for _, row in df.iterrows():
         if row["type"] == 1 or row["type"] == 2:
-            processed_gdfs.append(process_shapefile(row))
+            processed_gdfs.append(process_shapefile(row, driver="ESRI Shapefile"))
     return gpd.GeoDataFrame(pd.concat(processed_gdfs))
 
 
-def process_shapefile(row: pd.Series) -> gpd.GeoDataFrame:
-    gdf = gpd.read_file(row["file_path"], driver="ESRI Shapefile")
+def process_shapefile(row: pd.Series, **kwargs) -> gpd.GeoDataFrame:
+    gdf = gpd.read_file(row["file_path"], kwargs=kwargs)
     gdf["type"] = row["type"]
     gdf["region_id"] = row["region_id"]
     return gdf
