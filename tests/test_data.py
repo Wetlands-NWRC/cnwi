@@ -63,16 +63,15 @@ class DataTests(unittest.TestCase):
     def test_process_shapefile(self):
         row = pd.Series(
             {
-                "file_path": "/path/to/trainingPoints.shp",
+                "file_path": f"{self.data_dir}/122/trainingPoints.shp",
                 "region_id": "trainingPoints",
                 "type": 1,
             }
         )
         gdf = process_shapefile(row)
         self.assertIsInstance(gdf, gpd.GeoDataFrame)
-        self.assertEqual(len(gdf), ...)  # Add the expected number of rows
         self.assertListEqual(
-            list(gdf.columns), ["type", "region_id", ...]
+            list(gdf.columns), ["class_name", "geometry", "type", "region_id"]
         )  # Add the expected columns
 
     def test_create_lookup_table(self):
