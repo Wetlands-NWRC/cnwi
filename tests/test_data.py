@@ -68,7 +68,7 @@ class DataTests(unittest.TestCase):
                 "type": 1,
             }
         )
-        gdf = process_shapefile(row)
+        gdf = process_shapefile(row, driver="ESRI Shapefile")
         self.assertIsInstance(gdf, gpd.GeoDataFrame)
         self.assertListEqual(
             list(gdf.columns), ["class_name", "geometry", "type", "region_id"]
