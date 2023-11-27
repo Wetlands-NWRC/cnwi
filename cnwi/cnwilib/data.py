@@ -48,7 +48,7 @@ def process_shapefile(row: pd.Series) -> gpd.GeoDataFrame:
 
 def create_lookup_table(df: gpd.GeoDataFrame, col: str = None) -> pd.DataFrame:
     col = col or "class_name"
-    unique_labels = df[[col]].unique().tolist()
+    unique_labels = df[col].unique().tolist()
     return pd.DataFrame(
         {"class_name": unique_labels, "value": list(range(1, len(unique_labels) + 1))}
     )
