@@ -43,6 +43,8 @@ def process_data_manifest(df: pd.DataFrame) -> gpd.GeoDataFrame:
 def process_shapefile(row: pd.Series, **kwargs) -> gpd.GeoDataFrame:
     gdf = gpd.read_file(row["file_path"], kwargs=kwargs)
     gdf["type"] = row["type"]
+    gdf["x"] = gdf.geometry.x
+    gdf["y"] = gdf.geometry.y
     gdf["region_id"] = row["region_id"]
     return gdf
 
