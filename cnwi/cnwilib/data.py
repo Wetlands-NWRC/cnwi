@@ -42,6 +42,8 @@ def process_data_manifest(df: pd.DataFrame) -> gpd.GeoDataFrame:
 
 def process_shapefile(row: pd.Series, **kwargs) -> gpd.GeoDataFrame:
     gdf = gpd.read_file(row["file_path"], kwargs=kwargs)
+    if gdf.crs != "EPSG:4326":
+        gdf = gdf.to_crs("EPSG:4326")
     gdf["type"] = row["type"]
     gdf["x"] = gdf.geometry.x
     gdf["y"] = gdf.geometry.y
