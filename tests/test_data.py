@@ -50,6 +50,7 @@ class DataTests(unittest.TestCase):
         )
         gdf = process_data_manifest(df)
         self.assertIsInstance(gdf, gpd.GeoDataFrame)
+        self.assertEqual(gdf.crs, "EPSG:4326")
         self.assertListEqual(
             list(gdf.columns), ["class_name", "geometry", "type", "x", "y", "region_id"]
         )  # Add the expected columns
