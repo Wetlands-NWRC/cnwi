@@ -8,3 +8,4 @@ All notable changes to this project will be documented in this file.
 - Added Functionality to pre process data for use downstream for classification
 - Added Random Forest Classification Functionality
 - Added Functionality to compute Terrain Analysis from the tagee package
+- Added Functionality to process client side training and validation data
