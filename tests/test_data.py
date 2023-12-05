@@ -51,13 +51,7 @@ class DataTests(unittest.TestCase):
         gdf = process_data_manifest(df)
         self.assertIsInstance(gdf, gpd.GeoDataFrame)
         self.assertListEqual(
-            list(gdf.columns),
-            [
-                "class_name",
-                "geometry",
-                "type",
-                "region_id",
-            ],
+            list(gdf.columns), ["class_name", "geometry", "type", "x", "y", "region_id"]
         )  # Add the expected columns
 
     def test_process_shapefile(self):
