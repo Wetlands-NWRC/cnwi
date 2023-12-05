@@ -58,5 +58,7 @@ class SmileRandomForest:
         )
         return self
 
-    def predict(self, X: ee.Image | ee.FeatureCollection) -> ee.Image:
+    def predict(
+        self, X: ee.Image | ee.FeatureCollection
+    ) -> ee.Image | ee.FeatureCollection:
         return X.classify(self._model)
