@@ -75,7 +75,7 @@ class TimeSeries:
 
 
 ###############################################################################################
-class OpticalPreProcessor:
+class OpticalPreprocessor:
     def __init__(self, args: Any) -> None:
         self.data = ee.ImageCollection(args)
 
@@ -97,13 +97,11 @@ class OpticalPreProcessor:
         self.data = self.data.select(self.data.first().bandNames(), names)
         return self
 
-    def add_cloud_mask(self, func: Any) -> OpticalCollectionProcessor:
+    def set_cloud_mask(self, func: Any) -> OpticalCollectionProcessor:
         self.data = self.data.map(func)
         return self
 
-    def filter_cloud_cover(
-        self, meta_flag: str, max: float
-    ) -> OpticalCollectionProcessor:
+    def set_cloud_cover(self, meta_flag: str, max: float) -> OpticalCollectionProcessor:
         self.data = self.data.filter(ee.Filter.lt(meta_flag, max))
         return self
 
@@ -114,7 +112,7 @@ class OpticalPreProcessor:
 # Collection Processing
 class OpticalCollectionProcessor:
     def __init__(self, arg: Any) -> None:
-        self.data = ee.ImageCollection(arg)
+        self.data = arg
 
     @property
     def data(self) -> ee.ImageCollection:
