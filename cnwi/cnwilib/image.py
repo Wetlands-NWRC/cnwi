@@ -11,33 +11,87 @@ class Calculator(ABC):
         pass
 
 
-class NDVICalculator(Calculator):
+class NDVI(Calculator):
+    """
+    Calculates the Normalized Difference Vegetation Index (NDVI) for an image.
+
+    Args:
+        nir (str): The path to the NIR image file.
+        red (str): The path to the red image file.
+        name (str, optional): The name of the image. Defaults to "NDVI".
+    """
+
     def __init__(self, nir: str, red: str, name: str = None) -> None:
         self.nir = nir
         self.red = red
         self.name = name or "NDVI"
 
     def compute(self, image: ee.Image) -> ee.Image:
+        """
+        Compute the NDVI for the given image.
+
+        Args:
+            image (ee.Image): The input image.
+
+        Returns:
+            ee.Image: The computed NDVI image.
+        """
         return image.normalizedDifference([self.nir, self.red]).rename(self.name)
 
 
-class SAVICalculator(Calculator):
+class SAVI(Calculator):
+    """
+    Calculates the Soil-Adjusted Vegetation Index (SAVI) for an image.
+
+    Args:
+        nir (str): The name of the near-infrared band.
+        red (str): The name of the red band.
+        name (str, optional): The name of the output band. Defaults to "SAVI".
+
+    Returns:
+        ee.Image: The computed SAVI image.
+    """
+
     def __init__(self, nir: str, red: str, name: str = None) -> None:
         self.nir = nir
         self.red = red
         self.name = name or "SAVI"
 
     def compute(self, image: ee.Image) -> ee.Image:
+        """
+        Computes the desired expression on the given image and returns the result.
+
+        Args:
+            image (ee.Image): The input image.
+
+        Returns:
+            ee.Image: The computed image.
+        """
         return image.expression(
             "((NIR - RED) / (NIR + RED + 0.5)) * (1.5)",
             {"NIR": image.select(self.nir), "RED": image.select(self.red)},
         ).rename(self.name)
 
 
-class TasseledCapCalculator(Calculator):
+class TasseledCap(Calculator):
+    """
+    A class representing the Tasseled Cap transformation calculator.
+
+    This class computes the Tasseled Cap transformation on an input image.
+
+    Args:
+        **kwargs: Additional keyword arguments.
+
+    Attributes:
+        kwargs (dict): Additional keyword arguments.
+
+    Methods:
+        compute: Computes the Tasseled Cap transformation on an input image.
+
+    """
+
     def __init__(self, **kwargs) -> None:
-        self.keys = list(kwargs.keys())
-        self.values = list(kwargs.values())
+        self.kwargs = kwargs
 
     def compute(self, image: ee.Image) -> ee.Image:
         coefficients = ee.Array(
@@ -67,7 +121,7 @@ class TasseledCapCalculator(Calculator):
         return components
 
 
-class RatioCalculator(Calculator):
+class Ratio(Calculator):
     def __init__(self, numerator: str, denominator: str, name: str = None) -> None:
         self.numerator = numerator
         self.denominator = denominator
