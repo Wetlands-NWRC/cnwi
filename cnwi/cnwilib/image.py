@@ -1,11 +1,15 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Any
 
 import ee
 
 
 ####################################################################################################
 class Calculator(ABC):
+    def __call__(self, image) -> ee.Image:
+        return image.addBands(self.compute(image))
+
     @abstractmethod
     def compute(self, image: ee.Image) -> ee.Image:
         pass
