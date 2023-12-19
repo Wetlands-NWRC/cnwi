@@ -231,14 +231,9 @@ class ImageDirector:
         self.builder = self.builder.add_box_car().add_calculator(ratio).select_dv()
         return self._builder
 
-    def build_alos(self, start: str = None, end: str = None) -> ImageBuilder:
+    def build_alos(self, image: ee.Image) -> ImageBuilder:
         # set the build image
-        start, end = start or "2018-01-01", end or "2022-01-01"
-        self.builder.image = (
-            ee.ImageCollection("JAXA/ALOS/PALSAR/YEARLY/SAR")
-            .filterDate(start, end)
-            .median()
-        )
+        self.builder.image = image
         # set up calcs
         ratio = RatioCalculator("HH", "HV", "HH/HV")
         # raito
