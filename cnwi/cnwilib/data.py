@@ -96,7 +96,7 @@ class Manifest:
 
 
 class LookupTable:
-    def __init__(self, labels: list[str]) -> None:
+    def __init__(self, labels: list[str] = None) -> None:
         self.labels = labels
 
     @property
@@ -117,57 +117,34 @@ class LookupTable:
 
 
 ####################################################################################################
-class DataProcessor:
-    """
-    A class for processing training and validation data.
-
-    Attributes:
-        training (gpd.GeoDataFrame): The training data.
-        validation (gpd.GeoDataFrame): The validation data.
-        lookup_table (pd.DataFrame): The lookup table for class names and values.
-        processed_data (pd.DataFrame): The processed data.
-
-    Methods:
-        process(): Process the training and validation data.
-
-    """
-
+class ManifestProcessor:
     def __init__(
-        self, training: gpd.GeoDataFrame, validation: gpd.GeoDataFrame
+        self, manifest: Manifest, lookup_engine: LookupTable = LookupTable()
     ) -> None:
-        """
-        Initialize the DataProcessor class.
+        self.manifest = manifest
+        self.lookup_engine = lookup_engine
 
-        Args:
-            training (gpd.GeoDataFrame): The training data.
-            validation (gpd.GeoDataFrame): The validation data.
-        """
-        self.training = training
-        self.validation = validation
-        self.lookup_table = None
-        self.processed_data = None
+    @staticmethod
+    def _process_shapefile(row: pd.Series, **kwargs) -> gpd.GeoDataFrame:
+        gdf = gpd.read_file(row["file_path"], kwargs=kwargs)
+        if gdf.crs != "EPSG:4326":
+            gdf = gdf.to_crs("EPSG:4326")
+        gdf["type"] = row["type"]
+        gdf["region_id"] = row["region_id"]
+        return gdf
 
-    def process(self) -> DataProcessor:
-        """
-        Process the training and validation data.
+    def process(self) -> ManifestProcessor:
+        gdfs = []
+        for _, group in self.manifest:
+            for _, row in group[group["type"] != 3].iterrows():
+                gdf = self._process_shp(row)
+                gdfs.append(gdf)
+        self.processed_manifest = gpd.GeoDataFrame(pd.concat(gdfs))
+        return self
 
-        Returns:
-            DataProcessor: The processed data.
-        """
-        self.training["type"] = 1
-        self.validation["type"] = 2
-
-        # combine the training and validation data
-        combined = pd.concat([self.training, self.validation])
-        combined.to_crs("EPSG:4326", inplace=True)
-
-        # create a lookup table
-        labels = combined["class_name"].unique().tolist()
-        values = list(range(1, len(labels) + 1))
-
-        combined["class_name"] = combined["class_name"].map(dict(zip(labels, values)))
-        self.lookup_table = pd.DataFrame({"class_name": labels, "value": values})
-        self.processed_data = combined
+    def save(self, where: str, driver: str = None) -> ManifestProcessor:
+        driver = driver or "ESRI Shapefile"
+        self.processed_manifest.to_file(where, driver="ESRI Shapefile")
         return self
 
 
