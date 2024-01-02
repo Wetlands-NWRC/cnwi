@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import tempfile
 
 from typing import Iterable, Tuple
+from zipfile import ZipFile
 
 import ee
 import geopandas as gpd
@@ -167,6 +169,43 @@ class ManifestProcessor:
             os.path.join(where, "map.csv")
         )
         return self
+
+
+def features2Zip(
+    gdf: gpd.GeoDataFrame, groupby_col: str, where, file_prefix: str = None
+) -> None:
+    scratch = where / "scratch"
+    scratch.mkdir(exist_ok=True)
+
+    for _, group in gdf.groupby(groupby_col):
+        # save each group
+        file_prefix = file_prefix or "features"
+        group.to_file(scratch / f"{file_prefix}_{_}.shp", driver="ESRI Shapefile")
+        archive_name = f"{file_prefix}_{_}"
+        # compress each dataset
+        with ZipFile(scratch / f"{archive_name}.zip", "w") as zip:
+            zip.write(scratch / f"{archive_name}.shp")
+            zip.write(scratch / f"{archive_name}.dbf")
+            zip.write(scratch / f"{archive_name}.prj")
+            zip.write(scratch / f"{archive_name}.shx")
+            zip.write(scratch / f"{archive_name}.cpg")
+
+        # move the zip file to the processed directory
+        (where / "zipped").mkdir(exist_ok=True)
+        (scratch / f"{archive_name}.zip").rename(
+            where / "zipped" / f"{archive_name}.zip"
+        )
+
+        # clean up the scratch directory
+        (scratch / f"{archive_name}.shp").unlink()
+        (scratch / f"{archive_name}.dbf").unlink()
+        (scratch / f"{archive_name}.prj").unlink()
+        (scratch / f"{archive_name}.shx").unlink()
+        (scratch / f"{archive_name}.cpg").unlink()
+        # output processed/shapefile AND processed/zipped
+
+    # remove the scratch directory
+    scratch.rmdir()
 
 
 ####################################################################################################
