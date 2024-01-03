@@ -4,6 +4,8 @@ from typing import Any
 
 from math import pi
 
+from ee.imagecollection import ImageCollection
+
 from cnwi.cnwilib.image import NDVI, SAVI, TasseledCap, Ratio
 
 
@@ -74,113 +76,240 @@ class TimeSeries:
         return self
 
 
-###############################################################################################
-class OpticalPreprocessor:
-    def __init__(self, args: Any) -> None:
-        self.data = ee.ImageCollection(args)
-
-    def set_date(self, start: str, end: str) -> OpticalCollectionProcessor:
-        self.data = self.data.filterDate(start, end)
-        return self
-
-    def set_region(
-        self, region: ee.Geometry | ee.Feature | ee.FeatureCollection
-    ) -> OpticalCollectionProcessor:
-        self.data = self.data.filterBounds(region)
-        return self
-
-    def select_bands(self, selector: Any) -> OpticalCollectionProcessor:
-        self.data = self.data.select(selectors=selector)
-        return self
-
-    def set_band_names(self, names: list[str]) -> OpticalCollectionProcessor:
-        self.data = self.data.select(self.data.first().bandNames(), names)
-        return self
-
-    def set_cloud_mask(self, func: Any) -> OpticalCollectionProcessor:
-        self.data = self.data.map(func)
-        return self
-
-    def set_cloud_cover(self, meta_flag: str, max: float) -> OpticalCollectionProcessor:
-        self.data = self.data.filter(ee.Filter.lt(meta_flag, max))
-        return self
-
-    def build(self) -> ee.ImageCollection:
-        return self.data
+####################################################################################################
 
 
-# Collection Processing
-class OpticalCollectionProcessor:
-    def __init__(self, arg: Any) -> None:
-        self.data = arg
+class DataCubeProcessor:
+    BAND_NAMES = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"]
 
-    @property
-    def data(self) -> ee.ImageCollection:
-        return self._data
+    def __init__(self, collection: ee.ImageCollection) -> None:
+        self.collection = collection
 
-    @data.setter
-    def data(self, args: Any) -> None:
-        if isinstance(args, ee.ImageCollection):
-            self._data = args
-        else:
-            self._data = ee.ImageCollection(args)
-
-    def add_ndvi(
-        self, nir: str, red: str, name: str = "NDVI"
-    ) -> OpticalCollectionProcessor:
-        """Implement NDVI calculation for optical data."""
-        self.data = self.data.map(NDVI(nir, red, name))
-        return self
-
-    def add_tasseled_cap(self, **kwargs) -> OpticalCollectionProcessor:
-        bands = ["blue", "green", "red", "nir", "swir1", "swir2"]
-        if not all(b in kwargs for b in bands):
-            raise ValueError(
-                f"Missing one or more bands. Required bands: {', '.join(bands)}"
-            )
-        self.data = self.data.map(TasseledCap(**kwargs))
-        return self
-
-    def add_savi(
-        self, nir: str, red: str, name: str = "SAVI", L: float = 0.5
-    ) -> OpticalCollectionProcessor:
-        self.data = self.data.map(SAVI(nir, red, name))
-        return self
-
-    def build(self) -> ee.ImageCollection:
-        return self.data
-
-
-class SARCollectionProcessor:
-    def __init__(self, args) -> None:  # collection id or list of images
-        self.data = ee.ImageCollection(args)
-
-    def set_date(self, start: str, end: str) -> SARCollectionProcessor:
-        self.data = self.data.filterDate(start, end)
-        return self
-
-    def set_region(
-        self, region: ee.Geometry | ee.Feature | ee.FeatureCollection
-    ) -> SARCollectionProcessor:
-        self.data = self.data.filterBounds(region)
-        return self
-
-    def select_bands(self, var_args: Any) -> SARCollectionProcessor:
-        self.data = self.data.select(var_args)
-        return self
-
-    def denoise(self, radius: int = 1) -> SARCollectionProcessor:
-        self.data = self.data.map(
-            lambda image: image.convolve(ee.Kernel.square(radius))
+    def select_spectral_bands(self) -> DataCubeProcessor:
+        self.collection = self.collection.select(
+            "a_spri_b0[2-9].*|a_spri_b[1-2].*|b_summ_b0[2-9].*|b_summ_b[1-2].*|c_fall_b0[2-9].*|c_fall_b[1-2].*"
         )
         return self
 
-    def add_ratio(self, num: str, den: str, name: str) -> SARCollectionProcessor:
-        self.data = self.data.map(Ratio(num, den, name))
+    def rename_bands(self):
+        spring_bands = [f"{b}_1" for b in self.BAND_NAMES]
+        summer_bands = [f"{b}_2" for b in self.BAND_NAMES]
+        fall_bands = [f"{b}_3" for b in self.BAND_NAMES]
+
+        cur_bands = self.collection.first().bandNames()
+        dest_bands = spring_bands + summer_bands + fall_bands
+        self.collection = self.collection.select(cur_bands, dest_bands)
         return self
 
-    def build(self) -> ee.ImageCollection:
-        return self.data
+    def add_spring_ndvi(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(NDVI("B8_1", "B4_1", "NDVI_1"))
+        return self
+
+    def add_spring_savi(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(SAVI("B8_1", "B4_1", "SAVI_1"))
+        return self
+
+    def add_spring_tasseled_cap(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(
+            TasseledCap(
+                blue="B2_1",
+                green="B3_1",
+                red="B4_1",
+                nir="B8_1",
+                swir1="B11_1",
+                swir2="B12_1",
+            )
+        )
+        return self
+
+    def add_summer_ndvi(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(NDVI("B8_2", "B4_2", "NDVI_2"))
+        return self
+
+    def add_summer_savi(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(SAVI("B8_2", "B4_2", "SAVI_2"))
+        return self
+
+    def add_summer_tasseled_cap(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(
+            TasseledCap(
+                blue="B2_2",
+                green="B3_2",
+                red="B4_2",
+                nir="B8_2",
+                swir1="B11_2",
+                swir2="B12_2",
+            )
+        )
+        return self
+
+    def add_fall_ndvi(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(NDVI("B8_3", "B4_3", "NDVI_3"))
+        return self
+
+    def add_fall_savi(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(SAVI("B8_3", "B4_3", "SAVI_3"))
+        return self
+
+    def add_fall_tasseled_cap(self) -> DataCubeProcessor:
+        self.collection = self.collection.map(
+            TasseledCap(
+                blue="B2_3",
+                green="B3_3",
+                red="B4_3",
+                nir="B8_3",
+                swir1="B11_3",
+                swir2="B12_3",
+            )
+        )
+        return self
+
+    def transform(self) -> DataCubeProcessor:
+        self.collection = self.collection.mosaic()
+        return self
+
+    def process(self) -> DataCubeProcessor:
+        (
+            self.select_spectral_bands()
+            .rename_bands()
+            .add_spring_ndvi()
+            .add_spring_savi()
+            .add_spring_tasseled_cap()
+            .add_summer_ndvi()
+            .add_summer_savi()
+            .add_summer_tasseled_cap()
+            .add_fall_ndvi()
+            .add_fall_savi()
+            .add_fall_tasseled_cap()
+            .transform()
+        )
+        return self
 
 
 ###############################################################################################
+
+
+class RadarProcessor:
+    def __init__(self, collection: ee.ImageCollection) -> None:
+        self.collection = collection
+
+    def select_bands(self, pattern: str) -> RadarProcessor:
+        self.collection = self.collection.select(pattern)
+        return self
+
+    def apply_boxcar_filter(self):
+        self.collection = self.collection.map(
+            lambda image: image.convolve(ee.Kernel.square(1))
+        )
+        return self
+
+    def add_ratio(self, b1, b2, name):
+        self.collection = self.collection.map(Ratio(b1, b2, name))
+        return self
+
+    def transform(self) -> RadarProcessor:
+        self.collection = self.collection.mosaic()
+        return self
+
+
+class S1Processor(RadarProcessor):
+    def __init__(self, collection: ee.ImageCollection) -> None:
+        super().__init__(collection)
+
+    def process(self) -> S1Processor:
+        self.select_bands("V.*").apply_boxcar_filter().add_ratio(
+            "VV", "VH", "VV_VH"
+        ).transform()
+        return self
+
+
+class ALOSProcessor(RadarProcessor):
+    def __init__(self, start_date: str = None, end_date: str = None) -> None:
+        super().__init__(ee.ImageCollection("JAXA/ALOS/PALSAR/YEARLY/SAR_EPOCH"))
+        self.start_date = start_date or "2018"
+        self.end_date = end_date or "2021"
+
+    def filter_date(self) -> ALOSProcessor:
+        self.collection = self.collection.filterDate(self.start_date, self.end_date)
+        return self
+
+    def transform(self) -> RadarProcessor:
+        self.collection = self.collection.median()
+        return self
+
+    def process(self) -> ALOSProcessor:
+        (
+            self.select_bands("H.*")
+            .apply_boxcar_filter()
+            .add_ratio("HH", "HV", "HH_HV")
+            .transform()
+        )
+        return self
+
+
+## GAP AREA PROCESSOR
+class GapAreaProcessor:
+    def __init__(self, collection: ee.ImageCollection) -> None:
+        self.collection = collection
+
+    def __add__(self, other: GapAreaProcessor) -> GapAreaProcessor:
+        self.collection = self.collection.merge(other.collection)
+        return self
+
+    def transform(self) -> GapAreaProcessor:
+        self.collection = self.collection.median()
+        return self
+
+    def process(self) -> GapAreaProcessor:
+        self.collection = self.collection.mosaic()
+        return self
+
+
+class S2GapProcessor(GapAreaProcessor):
+    def __init__(self, start_date: str, end_date: str, region: ee.Geometry) -> None:
+        super().__init__(ee.ImageCollection())
+        self.start_date = start_date
+        self.end_date = end_date
+
+    def filter_date(self) -> S2GapProcessor:
+        pass
+
+    def mask_clouds(self) -> S2GapProcessor:
+        pass
+
+    def select_bands(self) -> S2GapProcessor:
+        pass
+
+    def add_ndvi(self) -> S2GapProcessor:
+        pass
+
+    def add_savi(self) -> S2GapProcessor:
+        pass
+
+    def add_tasseled_cap(self) -> S2GapProcessor:
+        pass
+
+    def process(self) -> S2GapProcessor:
+        self.collection = self.collection.mosaic()
+        return self
+
+
+class S1GapProcessor(GapAreaProcessor):
+    def __init__(self, collection: ee.ImageCollection) -> None:
+        super().__init__(collection)
+
+    def select_bands(self) -> S1GapProcessor:
+        pass
+
+    def denoise(self) -> S1GapProcessor:
+        pass
+
+    def add_ratio(self) -> S1GapProcessor:
+        pass
+
+    def process(self) -> S1GapProcessor:
+        self.collection = self.collection.mosaic()
+        return self
+
+
+##

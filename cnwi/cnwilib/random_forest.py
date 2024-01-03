@@ -24,7 +24,7 @@ class SmileRandomForest:
     ) -> None:
         self.params = hyper_paramaters
         self.output_mode = output_mode
-        self._model = None
+        self.model = None
 
     @property
     def output_mode(self) -> str:
@@ -41,17 +41,13 @@ class SmileRandomForest:
             )
         self._output_mode = mode
 
-    @property
-    def model(self) -> ee.Classifier:
-        return self._model
-
     def fit(
         self,
         features: ee.FeatureCollection,
         classProperty: str,
         inputProperties: list[str] | ee.List[str],
     ) -> SmileRandomForest:
-        self._model = (
+        self.model = (
             ee.Classifier.smileRandomForest(**self.params.__dict__)
             .setOutputMode(self.output_mode)
             .train(features, classProperty, inputProperties)
@@ -61,4 +57,13 @@ class SmileRandomForest:
     def predict(
         self, X: ee.Image | ee.FeatureCollection
     ) -> ee.Image | ee.FeatureCollection:
-        return X.classify(self._model)
+        return X.classify(self.model)
+
+    def save_model(self, asset_name) -> ee.batch.Task:
+        return ee.batch.Export.classifier.toAsset(
+            classifier=self.model, assetId=asset_name
+        )
+
+    def load_model(self, asset_name: str) -> SmileRandomForest:
+        self.model = ee.Classifier.load(asset_name)
+        return self

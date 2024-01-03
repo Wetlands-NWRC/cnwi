@@ -34,11 +34,11 @@ class AssessmentTable:
 
     @property
     def producers(self) -> ee.List:
-        return self.matrix.producersAccuracy()
+        return self.matrix.producersAccuracy().toList().flatten()
 
     @property
     def consumers(self) -> ee.List:
-        return self.matrix.consumersAccuracy()
+        return self.matrix.consumersAccuracy().toList().flatten()
 
     @property
     def overall(self) -> ee.Number:
@@ -47,6 +47,17 @@ class AssessmentTable:
     @property
     def kappa(self) -> ee.Number:
         return self.matrix.kappa()
+
+    def create_metrics(self) -> ee.FeatureCollection:
+        return ee.FeatureCollection(
+            [
+                ee.Feature(None, {"matrix": self.matrix.array()}),
+                ee.Feature(None, {"overall": self.overall}),
+                ee.Feature(None, {"producers": self.producers}),
+                ee.Feature(None, {"consumers": self.consumers}),
+                ee.Feature(None, {"order": self.class_order}),
+            ]
+        )
 
 
 # def compute_assessment_products(ee_components: AssessmentTable) -> ee.FeatureCollection:
