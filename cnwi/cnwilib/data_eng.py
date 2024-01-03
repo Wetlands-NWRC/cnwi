@@ -10,6 +10,8 @@ import ee
 import geopandas as gpd
 import pandas as pd
 
+from cnwi.data.zones import Zones
+
 
 ####################################################################################################
 # Client Side Functions and Classes
@@ -22,6 +24,8 @@ class Manifest:
         "region": 3,
     }
 
+    PK = "ECOREGION_ID"
+
     def __init__(self, data_dir: str) -> None:
         """
         Initialize the Data class.
@@ -32,6 +36,7 @@ class Manifest:
         self.data_dir = data_dir
         self.manifest = None
         self.groupby_col = "region_id"
+        self.zones = Zones()
 
     def __iter__(self) -> Iterable[Tuple[str, pd.DataFrame]]:
         """Iterates over the manifest, yielding region IDs and corresponding dataframes."""
@@ -49,12 +54,17 @@ class Manifest:
         self.manifest = pd.DataFrame(shapefile_paths, columns=["file_path"])
         return self
 
-    def set_region_id(self) -> Manifest:
+    def set_ecoregion_id(self) -> Manifest:
         """sets the region id"""
-        self.manifest["region_id"] = self.manifest["file_path"].str.extract(
-            r"(\b\d{1,3}\b)"
+        self.manifest[self.PK] = (
+            self.manifest["file_path"].str.extract(r"(\b\d{1,3}\b)").astype(int)
         )
         return self
+
+    def set_ecozone_id(self) -> Manifest:
+        zones = self.zones.load().table
+        self.manifest = pd.merge(self.manifest, zones, on=self.PK, how="inner")
+        pass
 
     def extract_type(self) -> Manifest:
         """sets the type"""
@@ -70,8 +80,8 @@ class Manifest:
 
     def create(self) -> Manifest:
         """creates the manifest"""
-        self.get_file_paths().set_region_id().extract_type().set_type_int()
-        self.manifest = self.manifest.sort_values(by=["region_id", "type"]).reset_index(
+        self.get_file_paths().set_ecoregion_id().extract_type().set_type_int().set_ecozone_id()
+        self.manifest = self.manifest.sort_values(by=[self.PK, "type"]).reset_index(
             drop=True
         )
         return self
