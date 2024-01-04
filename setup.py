@@ -8,7 +8,9 @@ if __name__ == "__main__":
         author="Ryan Hamilton",
         author_email="ryan.hamilton@ec.gc.ca",
         packages=find_packages(exclude=("tests", "test.*"), include=("cnwi", "cnwi.*")),
-        requires=[
-            "earthengine-api >= 0.1.384",
-        ],
+        entry_points={
+            "console_scripts": [
+                "cnwi = cnwi.cli:cli",
+            ],
+        },
     )
