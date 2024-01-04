@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import os
-import tempfile
 
-from typing import Iterable, Tuple
+from typing import Any, Tuple
 from zipfile import ZipFile
 
 import ee
@@ -80,7 +79,7 @@ def process_data_manifest(
 ####################################################################################################
 
 
-def features2Zip(
+def split_and_zip(
     gdf: gpd.GeoDataFrame, groupby_col: str, where, file_prefix: str = None
 ) -> None:
     """
