@@ -21,7 +21,7 @@ def data_manifest(data_dir: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A dataframe containing the manifest.
     """
-    M = {{"trainingPoints": 1, "validationPoints": 2, "region": 3}}
+    M = {"trainingPoints": 1, "validationPoints": 2, "region": 3}
     shapefile_paths = []
     for root, dirs, files in os.walk(data_dir):
         for file in files:
