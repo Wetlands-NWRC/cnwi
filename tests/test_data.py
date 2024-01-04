@@ -2,7 +2,7 @@ import unittest
 import os
 import pandas as pd
 import geopandas as gpd
-from cnwi.cnwilib.data import (
+from cnwi.cnwilib.data_eng import (
     get_shapefile_paths,
     create_raw_data_manifest,
     process_data_manifest,

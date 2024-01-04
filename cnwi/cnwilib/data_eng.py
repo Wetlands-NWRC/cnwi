@@ -35,7 +35,7 @@ class Manifest:
         """
         self.data_dir = data_dir
         self.manifest = None
-        self.groupby_col = "region_id"
+        self.groupby_col = "ECOREGION_ID"
         self.zones = Zones()
 
     def __iter__(self) -> Iterable[Tuple[str, pd.DataFrame]]:
@@ -61,7 +61,7 @@ class Manifest:
         )
         return self
 
-    def set_ecozone_id(self) -> Manifest:
+    def join_ecozone_id(self) -> Manifest:
         zones = self.zones.load().table
         self.manifest = pd.merge(self.manifest, zones, on=self.PK, how="inner")
         pass
@@ -80,7 +80,7 @@ class Manifest:
 
     def create(self) -> Manifest:
         """creates the manifest"""
-        self.get_file_paths().set_ecoregion_id().extract_type().set_type_int().set_ecozone_id()
+        self.get_file_paths().set_ecoregion_id().extract_type().set_type_int().join_ecozone_id()
         self.manifest = self.manifest.sort_values(by=[self.PK, "type"]).reset_index(
             drop=True
         )
@@ -100,6 +100,8 @@ class Manifest:
 
 
 class ManifestProcessor:
+    LAND_COVER_MAP = {"wetland": [], "non-wetland": [], "water": []}
+
     def __init__(self, manifest: Manifest) -> None:
         self.manifest = manifest
         self.label_col = "class_name"
@@ -117,10 +119,12 @@ class ManifestProcessor:
                 df = gpd.read_file(row["file_path"], driver="ESRI Shapefile")
                 if row["type"] != 3:
                     df["type"] = row["type"]
-                    df["region_id"] = row["region_id"]
+                    df["ECOREGION_ID"] = row["ECOREGION_ID"]
+                    df["ECOZONE_ID"] = row["ECOZONE_ID"]
                     self.training.append(df)
                 else:
-                    df["region_id"] = row["region_id"]
+                    df["ECOREGION_ID"] = row["ECOREGION_ID"]
+                    df["ECOZONE_ID"] = row["ECOZONE_ID"]
                     self.regions.append(df)
         return self
 
@@ -151,8 +155,9 @@ class ManifestProcessor:
         self.training = self.training.replace({self.label_col: self.map})
         return self
 
-    def process(self) -> ManifestProcessor:
+    def process(self, proc_level: int = 1) -> ManifestProcessor:
         """Process the manifest."""
+
         (
             self.read_manifest()
             .combine_training()
@@ -161,8 +166,7 @@ class ManifestProcessor:
             .reproject_regions()
             .re_map()
         )
-
-        return
+        return self
 
     def save_training(self, where: str, fname: str, **kwargs) -> ManifestProcessor:
         """Save the processed data to a csv file."""
