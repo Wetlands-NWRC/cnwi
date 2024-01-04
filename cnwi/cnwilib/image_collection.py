@@ -77,6 +77,21 @@ class TimeSeries:
 
 
 ####################################################################################################
+def process_data_cube(
+    collection_id: str, region: ee.Geometry | ee.FeatureCollection
+) -> DataCubeProcessor:
+    """
+    Process a data cube for a given collection ID and region.
+
+    Args:
+        collection_id (str): The ID of the image collection.
+        region (ee.Geometry | ee.FeatureCollection): The region of interest.
+
+    Returns:
+        DataCubeProcessor: The processed data cube.
+    """
+    collection = ee.ImageCollection(collection_id).filterBounds(region)
+    return DataCubeProcessor(collection).process()
 
 
 class DataCubeProcessor:
