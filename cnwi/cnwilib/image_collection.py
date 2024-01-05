@@ -248,13 +248,20 @@ class S1Processor(RadarProcessor):
 
 
 class ALOSProcessor(RadarProcessor):
-    def __init__(self, start_date: str = None, end_date: str = None) -> None:
+    def __init__(
+        self, start_date: str, end_date: str, region: ee.Geometry | ee.FeatureCollection
+    ) -> None:
         super().__init__(ee.ImageCollection("JAXA/ALOS/PALSAR/YEARLY/SAR_EPOCH"))
-        self.start_date = start_date or "2018"
-        self.end_date = end_date or "2021"
+        self.start_date = start_date
+        self.end_date = end_date
+        self.region = region
 
     def filter_date(self) -> ALOSProcessor:
         self.collection = self.collection.filterDate(self.start_date, self.end_date)
+        return self
+
+    def filter_region(self) -> ALOSProcessor:
+        self.collection = self.collection.filterBounds(self.region)
         return self
 
     def transform(self) -> RadarProcessor:
@@ -265,6 +272,7 @@ class ALOSProcessor(RadarProcessor):
         (
             self.select_bands("H.*")
             .apply_boxcar_filter()
+            .filter_region()
             .add_ratio("HH", "HV", "HH_HV")
             .transform()
         )
