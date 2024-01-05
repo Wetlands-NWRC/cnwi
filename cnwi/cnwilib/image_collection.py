@@ -79,7 +79,7 @@ class TimeSeries:
 ####################################################################################################
 def process_data_cube(
     collection_id: str, region: ee.Geometry | ee.FeatureCollection
-) -> DataCubeProcessor:
+) -> ee.ImageCollection:
     """
     Process a data cube for a given collection ID and region.
 
@@ -91,7 +91,7 @@ def process_data_cube(
         DataCubeProcessor: The processed data cube.
     """
     collection = ee.ImageCollection(collection_id).filterBounds(region)
-    return DataCubeProcessor(collection).process()
+    return DataCubeProcessor(collection).process().transform().collection
 
 
 class DataCubeProcessor:
@@ -204,6 +204,15 @@ class DataCubeProcessor:
 ###############################################################################################
 
 
+def process_s1(asset_ids: list[str]) -> ee.ImageCollection:
+    collection = ee.ImageCollection(asset_ids)
+    return S1Processor(collection).process().collection
+
+
+def process_alos(start_date: str = None, end_date: str = None) -> ALOSProcessor:
+    return ALOSProcessor(start_date, end_date).process().collection
+
+
 class RadarProcessor:
     def __init__(self, collection: ee.ImageCollection) -> None:
         self.collection = collection
@@ -262,69 +271,4 @@ class ALOSProcessor(RadarProcessor):
         return self
 
 
-## GAP AREA PROCESSOR
-class GapAreaProcessor:
-    def __init__(self, collection: ee.ImageCollection) -> None:
-        self.collection = collection
-
-    def __add__(self, other: GapAreaProcessor) -> GapAreaProcessor:
-        self.collection = self.collection.merge(other.collection)
-        return self
-
-    def transform(self) -> GapAreaProcessor:
-        self.collection = self.collection.median()
-        return self
-
-    def process(self) -> GapAreaProcessor:
-        self.collection = self.collection.mosaic()
-        return self
-
-
-class S2GapProcessor(GapAreaProcessor):
-    def __init__(self, start_date: str, end_date: str, region: ee.Geometry) -> None:
-        super().__init__(ee.ImageCollection())
-        self.start_date = start_date
-        self.end_date = end_date
-
-    def filter_date(self) -> S2GapProcessor:
-        pass
-
-    def mask_clouds(self) -> S2GapProcessor:
-        pass
-
-    def select_bands(self) -> S2GapProcessor:
-        pass
-
-    def add_ndvi(self) -> S2GapProcessor:
-        pass
-
-    def add_savi(self) -> S2GapProcessor:
-        pass
-
-    def add_tasseled_cap(self) -> S2GapProcessor:
-        pass
-
-    def process(self) -> S2GapProcessor:
-        self.collection = self.collection.mosaic()
-        return self
-
-
-class S1GapProcessor(GapAreaProcessor):
-    def __init__(self, collection: ee.ImageCollection) -> None:
-        super().__init__(collection)
-
-    def select_bands(self) -> S1GapProcessor:
-        pass
-
-    def denoise(self) -> S1GapProcessor:
-        pass
-
-    def add_ratio(self) -> S1GapProcessor:
-        pass
-
-    def process(self) -> S1GapProcessor:
-        self.collection = self.collection.mosaic()
-        return self
-
-
-##
+###############################################################################################
