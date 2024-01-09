@@ -1,0 +1,11 @@
+name: /home/rhamilton/code/cnwi/.conda
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - geopandas
+  - earthengine-api
+  - ipykernel
+  - geemap
+prefix: /home/rhamilton/code/cnwi/.conda
