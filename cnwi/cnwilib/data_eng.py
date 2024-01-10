@@ -31,7 +31,13 @@ def data_manifest(data_dir: str) -> pd.DataFrame:
     manifest["ECOREGION_ID"] = (
         manifest["file_path"].str.extract(r"(\b\d{1,3}\b)").astype(int)
     )
-    manifest["type"] = manifest["file_path"].str.extract(r"/(\w+)(?:Points)?\.shp")
+
+    manifest["type"] = manifest["file_path"].str.extract(
+        r"(\btrainingPoints\b|\bvalidationPoints\b|\bregion\b)"
+    )
+
+    manifest = manifest[manifest["file_path"].astype(str).str.contains(r"(\.shp)")]
+
     manifest["type"] = manifest["type"].replace(M)
     manifest = manifest.sort_values(by=["ECOREGION_ID", "type"]).reset_index(drop=True)
     return manifest
