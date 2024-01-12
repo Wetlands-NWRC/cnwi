@@ -275,8 +275,8 @@ class FourierTransform:
 
         # add phase and amplitude to each image in the collection
         for mode in range(1, self.time_series.modes + 1):
-            self._add_phase(mode)
-            self._add_amplitude(mode)
+            self.add_phase(mode)
+            self.add_amplitude(mode)
 
         selectors = f"{self.time_series.dependent}|.*coef|amp.*|phase.*"
         return self.time_series.collection.median().select(selectors).unitScale(-1, 1)
