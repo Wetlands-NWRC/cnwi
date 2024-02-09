@@ -1,4 +1,6 @@
 import click
+import geopandas as gpd
+import pandas as pd
 
 from pathlib import Path
 
@@ -9,34 +11,29 @@ def cli():
 
 
 @cli.command()
-@click.option("--input", "-i", type=click.Path(exists=True), required=True)
-@click.option("--output", "-o", type=click.Path(), required=True)
-def ingest(input, output):
-    from cnwi.cnwilib.ingest import ingest_data
+@click.argument("training")
+@click.argument("validation")
+def build_features(training, validation, region):
+    """Builds features from a GeoJSON file"""
+    click.echo(training)
+    gdf_train = gpd.read_file(training, driver="ESRI Shapefile")
+    gdf_train["split"] = "train"
 
-    p = Path(output)
-    if not p.exists():
-        p.mkdir(parents=True)
-    ingest_data(input, output)
+    click.echo(validation)
+    gdf_test = gpd.read_file(validation, driver="ESRI Shapefile")
+    gdf_test["split"] = "test"
+
+    gdf = pd.merge([gdf_train, gdf_test])
+    gdf = gdf.to_crs("EPSG:4326")
+
+    click.echo(region)
 
 
 @cli.command()
-@click.option("--input", "-i", type=click.Path(exists=True), required=True)
-@click.option("--output", "-o", type=click.Path(), required=True)
-def build_features(input, output):
-    """Builds features from a GeoJSON file"""
-    from cnwi.cnwilib import data_eng as de
+@click.argument("file")
+def prep_for_ee(file):
+    pass
 
-    manifest = de.data_manifest(input)
-    training, regions, lookup = de.process_data_manifest(manifest)
 
-    output_dir = Path(output)
-    if not output_dir.exists():
-        output_dir.mkdir()
-
-    training.to_file(output_dir / "training.geojson", driver="GeoJSON")
-    regions.to_file(output_dir / "regions.geojson", driver="GeoJSON")
-    lookup.to_csv(output_dir / "lookup.csv")
-
-    de.split_and_zip(training, "ECOREGION_ID", output_dir)
-    de.split_and_zip(regions, "ECOREGION_ID", output_dir, "regions")
+if __name__ == "__main__":
+    cli()
