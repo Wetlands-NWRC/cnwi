@@ -7,14 +7,14 @@ import ee
 class ConfusionMatrix:
     def __init__(self, data):
         self.cfm = data
-        self.data = [ee.Feature(None, {"matrix": self.cfm.array()})]
+        self.components = []
 
     def add_accuracy(self):
-        self.data.append(ee.Feature(None, {"overall": self.cfm.accuracy()}))
+        self.components.append(ee.Feature(None, {"overall": self.cfm.accuracy()}))
         return self
 
     def add_producers(self):
-        self.data.append(
+        self.components.append(
             ee.Feature(
                 None, {"producers": self.cfm.producersAccuracy().toList().flatten()}
             )
@@ -22,7 +22,7 @@ class ConfusionMatrix:
         return self
 
     def add_consumers(self):
-        self.data.append(
+        self.components.append(
             ee.Feature(
                 None, {"consumers": self.cfm.consumersAccuracy().toList().flatten()}
             )
@@ -30,27 +30,17 @@ class ConfusionMatrix:
         return self
 
     def add_order(self):
-        self.data.append(ee.Feature(None, {"order": self.cfm.order()}))
+        self.components.append(ee.Feature(None, {"order": self.cfm.order()}))
         return self
 
-    def get_compoents(self):
-        components = [
-            ee.Feature(None, {"matrix": self.cfm.array()}),
-            ee.Feature(None, {"overall": self.cfm.accuracy()}),
-            ee.Feature(
-                None, {"producers": self.cfm.producersAccuracy().toList().flatten()}
-            ),
-            ee.Feature(
-                None, {"consumers": self.cfm.consumersAccuracy().toList().flatten()}
-            ),
-            ee.Feature(None, {"order": self.cfm.order}),
-        ]
-        self.cfm = ee.FeatureCollection(components)
+    def mk_components_table(self):
+        self.components.append(ee.Feature(None, {"matrix": self.cfm.array()}))
+        self.components = ee.FeatureCollection(self.components)
         return self
 
     def save_table_to_drive(self, name, folder_name, start_task: bool = True):
         task = ee.batch.Export.table.toDrive(
-            collection=self.cfm,
+            collection=self.components,
             description="",
             folder=folder_name,
             fileNamePrefix=name,
@@ -116,13 +106,13 @@ class SmileRandomForest:
             predict = self.predict(obj)
             order = obj.aggregate_array("class_name").distinct()
             matrix = predict.errorMatrix("class_name", "classification", order)
-            return ConfusionMatrix(data=matrix)
+            return ConfusionMatrix(matrix)
         else:
             return None
 
     def save_model(self, asset_name) -> ee.batch.Task:
         task = ee.batch.Export.classifier.toAsset(
-            classifier=self.model, assetId=asset_name
+            classifier=self.model, assetId=asset_name, description=""
         )
 
         task.start()
