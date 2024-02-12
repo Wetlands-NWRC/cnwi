@@ -13,8 +13,8 @@ class RemoteSensingDataset:
 
 
 class RemoteSensingDatasetProcessor:
-    def __init__(self, arg) -> None:
-        self._dataset = arg
+    def __init__(self, arg=None) -> None:
+        self.dataset = arg
 
     @property
     def dataset(self):
@@ -22,10 +22,14 @@ class RemoteSensingDatasetProcessor:
 
     @dataset.setter
     def dataset(self, arg):
-        if isinstance(arg, ee.ImageCollection):
-            self._dataset = arg
-        else:
+        # use case str,  list[str] or None
+        if arg is None:
+            self._dataset = None
+        elif isinstance(arg, str):
             self._dataset = ee.ImageCollection(arg)
+        elif isinstance(arg, list):
+            if all(isinstance(element, str) for element in arg):
+                self._dataset = ee.ImageCollection(arg)
 
     def filter_dates(self, start, end):
         self._dataset = self._dataset.filterDate(start, end)
