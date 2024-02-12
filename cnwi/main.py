@@ -2,6 +2,7 @@ import os
 import sys
 
 from dataclasses import dataclass
+from pprint import pprint
 
 import ee
 
@@ -46,12 +47,12 @@ def main(args: list[str]) -> int:
     project_root, name = split_id(feature_id)
 
     # Step 1: Extract the features we want to model
+    # Samples Work
     features = Features(feature_id)
     stack = image_processing(
         datasets=dataset,
         aoi=features.dataset,
     )  # the object we want to extract features from
-    print("Extracting Features...")
     samples = features.extract(stack)
     # save the extracted features to asset store
     samples_asset_id = f"{project_root}/{name}_samples"
@@ -64,49 +65,38 @@ def main(args: list[str]) -> int:
         return samples_status
 
     # step 2: Model and asses the model
-    print("Computing Random Forest Model...")
     # load extracted features from the asset store
     buldt_features = Features(samples_asset_id)
     train = buldt_features.get_training("type", 1).dataset
     test = buldt_features.get_testing("type", 2).dataset
+
     # need to create our model, and fit
     rf = SmileRandomForest()
     rf.fit(features=train, label_col="class_name", predictors=stack.bandNames())
-    # do assessment
-    confusion_matrix = rf.assess(test)
-    # save model to asset store
     rf_model_id = f"{project_root}/{name}_rf_model"
     rf_model_task = rf.save_model(rf_model_id)
+    print(f"Exporting Model: {rf_model_task.id}")
+
+    # do assessment
+    confusion_matrix = rf.assess(test)
+
+    (
+        confusion_matrix.add_accuracy()
+        .add_producers()
+        .add_consumers()
+        .add_order()
+        .mk_components_table()
+        .save_table_to_drive(name=f"{name}_confusion_matrix", folder_name=f"{name}")
+    )
+
+    # save model to asset store
     # save assessment table to
-    print("Saving Random Forest Model...")
     rf_task = monitor_task(rf_model_task)
     if rf_task > 1:
         print("Error: Random Forest Task Non Zero status")
         return rf_task
 
-    # step 3: Classify and export
-    print("Classifying...")
-    server_aoi = ee.FeatureCollection(region_id).geometry()
-    classify_stack = image_processing(aoi=server_aoi, datasets=dataset)
-    rfm = rf.load_model(classify_stack)
-    cls_img = rfm.predict(classify_stack)
-
-    print("Exporting Classified Image...")
-    classified_image_task = ee.batch.Export.image.toDrive(
-        image=cls_img,
-        description="",
-        folder=f"{name}_classified",
-        fileNamePrefix=f"{name}-",
-        region=server_aoi,
-        crs="EPSG:4326",
-        maxPixels=1e13,
-        fileDimensions=[2048, 2048],
-        fileFormat="GeoTIFF",
-        formatOptions={"cloudOptimized": True},
-    )
-    classified_image_task.start()
-
-    # print("")
+    # Step 3: Classify the stack
 
     return 0
 
