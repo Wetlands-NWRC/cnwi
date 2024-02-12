@@ -71,3 +71,16 @@ class RemoteSensingDatasetProcessorTests(unittest.TestCase):
         ).build()
         # Assert that the processed dataset has the expected number of bands
         self.assertEqual(processed_dataset.first().bandNames().size().getInfo(), 9)
+
+    def test_set_image_collection_from_setter_list_of_str(self):
+        img_list = [
+            "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20190601T220203_20190601T220228_027492_031A28_EB74",
+            "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20190601T220228_20190601T220253_027492_031A28_1D62",
+        ]
+        rsdp = RemoteSensingDatasetProcessor()
+        rsdp.dataset = img_list
+        self.assertIsInstance(rsdp.dataset, ee.ImageCollection)
+
+    def test_set_image_collection_from_setter_init_with_default(self):
+        rsdp = RemoteSensingDatasetProcessor()
+        self.assertIsNone(rsdp.dataset)
