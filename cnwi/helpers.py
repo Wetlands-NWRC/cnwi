@@ -16,28 +16,35 @@ def image_processing(aoi, datasets) -> ee.Image:
         ee.Image: Composite image generated from the processed datasets.
     """
 
+    stack = []
+
     # set up the datasets
-    s1_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.s1, aoi=aoi)
-    dc_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.data_cube, aoi=aoi)
+    if datasets.s1 is not None:
+        s1_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.s1, aoi=aoi)
+        s1_es, s1_ls = rsd.RemoteSensingDatasetProcessing().s1_processing(s1_rsd)
+        stack.extend([s1_es.mosaic(), s1_ls.mosaic()])
+
+    if datasets.dc is not None:
+        dc_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.dc, aoi=aoi)
+        data_cube = rsd.RemoteSensingDatasetProcessing().data_cube_processing(dc_rsd)
+        stack.append(data_cube.mosaic())
+
     al_rsd = rsd.RemoteSensingDataset(dataset_id="JAXA/ALOS/PALSAR/YEARLY/SAR", aoi=aoi)
-    ta_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.ta, aoi=aoi)
-    ft_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.ft, aoi=aoi)
+    alos = rsd.RemoteSensingDatasetProcessing().alos_processing(al_rsd)
+    stack.append(alos.median())
+
+    if datasets.ta is not None:
+        ta_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.ta, aoi=aoi)
+        terrain = rsd.RemoteSensingDatasetProcessing().terrain_processing(ta_rsd)
+        stack.append(terrain.mosaic())
+
+    if datasets.ft is not None:
+        ft_rsd = rsd.RemoteSensingDataset(dataset_id=datasets.ft, aoi=aoi)
+        fourier = rsd.RemoteSensingDatasetProcessing().fourier_processing(ft_rsd)
+        stack.append(fourier.mosaic())
 
     # invoke processing pipelines
-    s1_es, s1_ls = rsd.RemoteSensingDatasetProcessing().s1_processing(s1_rsd)
-    data_cube = rsd.RemoteSensingDatasetProcessing().data_cube_processing(dc_rsd)
-    alos = rsd.RemoteSensingDatasetProcessing().alos_processing(al_rsd)
-    terrain = rsd.RemoteSensingDatasetProcessing().terrain_processing(ta_rsd)
-    fourier = rsd.RemoteSensingDatasetProcessing().fourier_processing(ft_rsd)
-
-    return ee.Image.cat(
-        s1_es.mosaic(),
-        s1_ls.mosaic(),
-        data_cube.mosaic(),
-        alos.median(),
-        terrain.mosaic(),
-        fourier.mosaic(),
-    )
+    return ee.Image.cat(*stack)
 
 
 def monitor_task(task: ee.batch.Task) -> int:

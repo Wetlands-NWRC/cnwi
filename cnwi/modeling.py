@@ -84,7 +84,9 @@ class SmileRandomForest:
 
     @classmethod
     def load_model(cls, asset_name: str) -> SmileRandomForest:
-        return cls(model=ee.Classifier.load(asset_name))
+        instance = cls()
+        instance.model = ee.Classifier.load(asset_name)
+        return instance
 
     def fit(
         self,
@@ -119,6 +121,10 @@ class SmileRandomForest:
             return None
 
     def save_model(self, asset_name) -> ee.batch.Task:
-        return ee.batch.Export.classifier.toAsset(
+        task = ee.batch.Export.classifier.toAsset(
             classifier=self.model, assetId=asset_name
         )
+
+        task.start()
+
+        return task

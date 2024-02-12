@@ -1,6 +1,10 @@
 import unittest
 import ee
-from cnwi.rsd import RemoteSensingDatasetProcessor
+from cnwi.rsd import (
+    RemoteSensingDatasetProcessor,
+    RemoteSensingDataset,
+    RemoteSensingDatasetProcessing,
+)
 
 
 class RemoteSensingDatasetProcessorTests(unittest.TestCase):
@@ -84,3 +88,30 @@ class RemoteSensingDatasetProcessorTests(unittest.TestCase):
     def test_set_image_collection_from_setter_init_with_default(self):
         rsdp = RemoteSensingDatasetProcessor()
         self.assertIsNone(rsdp.dataset)
+
+    def test_filter_bounds_on_live_data(self):
+        rsdp = RemoteSensingDatasetProcessor()
+
+        dataset = [
+            "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20190601T220203_20190601T220228_027492_031A28_EB74",
+            "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20190601T220228_20190601T220253_027492_031A28_1D62",
+        ]
+
+        rsdp.dataset = dataset
+        rsdp.filter_bounds(ee.Geometry.Point(0, 0))
+
+
+class TestRemoteSensingDatasetProcessing(unittest.TestCase):
+    def setUp(self):
+        ee.Initialize()
+
+        self.dataset = [
+            "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20190601T220203_20190601T220228_027492_031A28_EB74",
+            "COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20190601T220228_20190601T220253_027492_031A28_1D62",
+        ]
+        self.aoi = ee.FeatureCollection("projects/cnwi-er-124/assets/data/features_124")
+
+    def test_s1_processing(self):
+
+        s1_dataset = RemoteSensingDataset(dataset_id=self.dataset, aoi=self.aoi)
+        processing = RemoteSensingDatasetProcessing().s1_processing(dataset=s1_dataset)

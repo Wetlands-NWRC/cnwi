@@ -20,12 +20,16 @@ class Features:
         )
         return Features(samples, label_col=self.label_col)
 
-    def get_training(self):
-        features = self._dataset.filter(ee.Filter.eq("split", "train"))
+    def get_training(self, meta_flag: str = None, value: str = None):
+        meta_flag = meta_flag or "split"
+        value = value or "train"
+        features = self._dataset.filter(ee.Filter.eq(meta_flag, value))
         return Features(features, label_col=self.label_col)
 
-    def get_testing(self):
-        test = self._dataset.filter(ee.Filter.eq("split", "test"))
+    def get_testing(self, meta_flag: str = None, value: str = None):
+        meta_flag = meta_flag or "split"
+        value = value or "test"
+        test = self._dataset.filter(ee.Filter.eq(meta_flag, value))
         return Features(test, label_col=self.label_col)
 
     def save_to_asset(self, asset_id, start_task: bool = True) -> ee.batch.Task:
