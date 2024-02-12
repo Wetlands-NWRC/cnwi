@@ -16,7 +16,7 @@ class Features:
 
     def extract(self, image):
         samples = image.sampleRegions(
-            collection=self._dataset, scale=10, tilesScale=16, geometries=True
+            collection=self._dataset, scale=10, tileScale=16, geometries=True
         )
         return Features(samples, label_col=self.label_col)
 
