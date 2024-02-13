@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cnwi"
+version = "0.1.0"
+description = "CNWI cloud computing classification pipeline"
+authors = [{ name = "Ryan Hamilton", email = "ryan.hamilton@ec.gc.ca" }]
+readme = "readme.md"
+requires-python = ">=3.11"
+dependencies = ["earthengine-api>=0.1.384"]
+
+[tool.setuptools]
+packages = ["cnwi"]
+
+[project.scripts]
+cnwi = "cnwi.__main__:main"
