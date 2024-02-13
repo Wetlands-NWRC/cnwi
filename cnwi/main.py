@@ -1,8 +1,6 @@
-import os
 import sys
 
 from dataclasses import dataclass
-from pprint import pprint
 
 import ee
 
@@ -97,6 +95,31 @@ def main(args: list[str]) -> int:
         return rf_task
 
     # Step 3: Classify the stack
+    aoi = ee.FeatureCollection(region_id).geometry()
+    stack = image_processing(aoi, dataset)
+
+    model = SmileRandomForest.load_model(rf_model_id)
+
+    predict = model.predict(stack)
+
+    classified_image_task = ee.batch.Export.image.toDrive(
+        image=predict,
+        description="",
+        folder=f"{name}_classification",
+        fileNamePrefix=f"{name}-",
+        region=aoi,
+        scale=10,
+        crs="EPSG:4326",
+        maxPixels=1e13,
+        fileDimensions=[2048, 2048],
+        skipEmptyTiles=True,
+        formatOptions={"cloudOptimized": True},
+    )
+    print(f"Exporting Classification: {classified_image_task.id}")
+    classified_image_task.start()
+    print(
+        "To Monitor Classification task go to: https://code.earthengine.google.com/tasks"
+    )
 
     return 0
 
