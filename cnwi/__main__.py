@@ -31,7 +31,9 @@ def load_payload(filename: str) -> Datasets | int:
     return Datasets(data.get("s1"), data.get("dc"), data.get("ft"), data.get("ta"))
 
 
-def main(args: list[str]) -> int:
+def main() -> int:
+    args = sys.argv[1:]
+
     # needs to args a 2 asset ids, one that represents features and one the aoi
     if len(args) != 3:
         print("<Usage>: main.py <features_id> <regions_id> <payload.json>")
@@ -126,4 +128,4 @@ def main(args: list[str]) -> int:
 
 if __name__ == "__main__":
     ee.Initialize()
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
